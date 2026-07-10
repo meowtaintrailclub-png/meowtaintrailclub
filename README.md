@@ -81,6 +81,7 @@ job has to turn them into leaderboard rows by calling the Strava API.
 - Monthly reset: just filter `activities.started_at` by date range, or
   add a UI to pick a `challenges` row (table's already there for this)
 
+
 ## What to build next (in rough order)
 1. Add a challenge picker so `/leaderboard` filters by the active month
 2. Add categories/distance tiers per challenge
