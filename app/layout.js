@@ -27,6 +27,10 @@ export default function RootLayout({ children }) {
           &copy; {year} Meowtain Trail Club. All rights reserved. &middot;{" "}
           <a href="/legal" style={{ color: "#8A8A85", textDecoration: "underline" }}>
             Privacy &amp; Disclaimer
+          </a>{" "}
+          &middot;{" "}
+          <a href="mailto:meowtaintrailclub@gmail.com" style={{ color: "#8A8A85", textDecoration: "underline" }}>
+            meowtaintrailclub@gmail.com
           </a>
         </footer>
       </body>
