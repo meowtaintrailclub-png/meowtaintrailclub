@@ -144,6 +144,9 @@ export default async function AdminPage({ searchParams }) {
         .mtc-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #FF5A1F; margin: 0 0 8px; }
         .mtc-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 32px; margin: 0; }
         .mtc-count { color: #8A8A85; font-size: 13px; margin-top: 6px; }
+        .mtc-nav-row { margin-top: 16px; }
+        .mtc-nav-row a { font-size: 13px; color: #FF5A1F; text-decoration: none; font-weight: 600; }
+        .mtc-nav-row a:hover { text-decoration: underline; }
         .mtc-admin-body { max-width: 900px; margin: 24px auto 0; padding: 0 20px; }
         .mtc-filter-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #5A5854; margin: 0 0 8px; }
         .mtc-filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
@@ -170,6 +173,9 @@ export default async function AdminPage({ searchParams }) {
           <h1 className="mtc-title">Members</h1>
           <p className="mtc-count">
             {members.length} shown &middot; {selectedMonth === "all" ? "All time" : monthLabel(selectedMonth)}
+          </p>
+          <p className="mtc-nav-row">
+            <a href="/admin/prizes">Manage Prizes &amp; Lucky Draw &rarr;</a>
           </p>
         </div>
 
