@@ -1,4 +1,4 @@
-javascriptimport { redirect, notFound } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { supabaseAdmin } from "../../../../lib/supabase";
 import { isAdminLoggedIn } from "../../../../lib/adminSession";
 
