@@ -117,7 +117,7 @@ export default async function Leaderboard({ searchParams }) {
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
         .mtc-page { min-height: 100vh; background: #0D0D0D; color: #F5F1EA; font-family: 'Inter', sans-serif; padding-bottom: 60px; }
         .mtc-hero { padding: 40px 24px 20px; text-align: center; border-bottom: 1px solid #201F1C; }
-        .mtc-logo { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 1px solid #2A2A2A; margin-bottom: 16px; }
+        .mtc-logo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #2A2A2A; margin-bottom: 14px; }
         .mtc-back { display: block; color: #8A8A85; font-size: 13px; text-decoration: none; margin-bottom: 22px; }
         .mtc-back:hover { color: #F5F1EA; }
         .mtc-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #FF5A1F; margin: 0 0 8px; }
@@ -142,8 +142,9 @@ export default async function Leaderboard({ searchParams }) {
         .mtc-empty p.title { color: #F5F1EA; font-weight: 600; margin: 16px 0 6px; }
         .mtc-empty p.sub { color: #8A8A85; margin: 0; font-size: 14px; }
         .mtc-footer { max-width: 620px; margin: 26px auto 0; padding: 0 20px; text-align: center; }
-        .mtc-footer a { color: #8A8A85; text-decoration: none; font-size: 13px; }
+        .mtc-footer a { color: #8A8A85; text-decoration: none; font-size: 13px; display: block; margin-bottom: 10px; }
         .mtc-footer a:hover { color: #F5F1EA; }
+        .mtc-footer a.share { color: #FF5A1F; font-weight: 600; }
         @media (max-width: 480px) {
           .mtc-title { font-size: 28px; }
           .mtc-stats { font-size: 11px; }
@@ -208,6 +209,7 @@ export default async function Leaderboard({ searchParams }) {
         )}
 
         <div className="mtc-footer">
+          <a href={`/public?month=${selectedMonth}${genderSuffix}`} className="share">Share this leaderboard &rarr;</a>
           <a href="/profile">&larr; Back to my profile</a>
         </div>
       </div>
