@@ -11,12 +11,13 @@ export async function POST(request) {
   const formData = await request.formData();
   const whatsapp = formData.get("whatsapp") || "";
   const address = formData.get("address") || "";
+  const email = formData.get("email") || "";
   const date_of_birth = formData.get("date_of_birth") || null;
 
   const supabase = supabaseAdmin();
   const { error } = await supabase
     .from("runners")
-    .update({ whatsapp, address, date_of_birth })
+    .update({ whatsapp, address, email, date_of_birth })
     .eq("id", runnerId);
 
   if (error) throw error;
