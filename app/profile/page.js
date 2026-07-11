@@ -48,7 +48,7 @@ export default async function Profile({ searchParams }) {
         <img src={runner.avatar_url} alt={runner.name} style={{ width: 96, height: 96, borderRadius: "50%", marginBottom: 16 }} />
       )}
       <h1>{runner.name}</h1>
-      <p style={{ color: "#666" }}>Connected to Go-Tribe</p>
+      <p style={{ color: "#666" }}>Connected to Meowtain Trail Club</p>
 
       <div style={{ marginTop: 32, textAlign: "left", background: "#f7f7f7", padding: 20, borderRadius: 8 }}>
         <p><strong>Activities:</strong> {totals.count}</p>
