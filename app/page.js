@@ -58,6 +58,8 @@ export default async function Home() {
         .mtc-sub { color: #9C9A94; font-size: 15px; line-height: 1.6; margin: 0 0 30px; }
         .mtc-cta { display: inline-flex; align-items: center; gap: 10px; padding: 14px 30px; background: #FF5A1F; color: #0D0D0D; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px; transition: opacity 0.15s ease; }
         .mtc-cta:hover { opacity: 0.88; }
+        .mtc-secondary-link { display: block; margin-top: 16px; color: #8A8A85; text-decoration: none; font-size: 13px; }
+        .mtc-secondary-link:hover { color: #F5F1EA; }
         .mtc-stats-strip { border-bottom: 1px solid #201F1C; padding: 22px 24px; }
         .mtc-stats-inner { max-width: 640px; margin: 0 auto; display: flex; justify-content: center; gap: 36px; flex-wrap: wrap; }
         .mtc-stat { text-align: center; }
@@ -97,6 +99,7 @@ export default async function Home() {
               Connect your Strava, log every trail run, and climb this month's leaderboard — together with the whole club.
             </p>
             <a href="/api/auth/strava" className="mtc-cta">Connect with Strava</a>
+            <a href="/public" className="mtc-secondary-link">View leaderboard without logging in &rarr;</a>
           </div>
         </div>
 
