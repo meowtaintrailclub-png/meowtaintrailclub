@@ -1,8 +1,24 @@
 export const metadata = {
   title: "Meowtain Trail Club",
-  description: "Monthly trail running challenge leaderboard",
+  description: "Connect your Strava, log every trail run, and climb this month's leaderboard.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://meowtaintrailclub.vercel.app"),
   icons: {
     icon: "/Meowtain-logo.jpeg",
+  },
+  openGraph: {
+    title: "Meowtain Trail Club",
+    description: "Connect your Strava, log every trail run, and climb this month's leaderboard.",
+    url: "/",
+    siteName: "Meowtain Trail Club",
+    images: ["/Meowtain-logo.jpeg"],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Meowtain Trail Club",
+    description: "Connect your Strava, log every trail run, and climb this month's leaderboard.",
+    images: ["/Meowtain-logo.jpeg"],
   },
 };
 
