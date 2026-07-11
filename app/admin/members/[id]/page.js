@@ -17,7 +17,7 @@ export default async function EditMember({ params }) {
   const supabase = supabaseAdmin();
   const { data: member, error } = await supabase
     .from("runners")
-    .select("id, name, whatsapp, email, address, date_of_birth, created_at")
+    .select("id, name, whatsapp, email, address, date_of_birth, gender, created_at")
     .eq("id", params.id)
     .single();
 
@@ -76,6 +76,13 @@ export default async function EditMember({ params }) {
 
             <label className="mtc-field-label">Date of Birth</label>
             <input type="date" name="date_of_birth" defaultValue={member.date_of_birth || ""} className="mtc-field-input" />
+
+            <label className="mtc-field-label">Gender</label>
+            <select name="gender" defaultValue={member.gender || ""} className="mtc-field-input">
+              <option value="">Not set</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
 
             <button type="submit" className="mtc-btn-primary">Save changes</button>
             <a href="/admin" className="mtc-btn-ghost">Cancel</a>
