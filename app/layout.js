@@ -10,15 +10,13 @@ export const metadata = {
     description: "Connect your Strava, log every trail run, and climb this month's leaderboard.",
     url: "/",
     siteName: "Meowtain Trail Club",
-    images: ["/Meowtain-logo.jpeg"],
     locale: "en_US",
     type: "website",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Meowtain Trail Club",
     description: "Connect your Strava, log every trail run, and climb this month's leaderboard.",
-    images: ["/Meowtain-logo.jpeg"],
   },
 };
 
