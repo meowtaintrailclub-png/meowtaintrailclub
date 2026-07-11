@@ -1,8 +1,13 @@
-import { redirect, notFound } from "next/navigation";
+javascriptimport { redirect, notFound } from "next/navigation";
 import { supabaseAdmin } from "../../../../lib/supabase";
 import { isAdminLoggedIn } from "../../../../lib/adminSession";
 
 export const dynamic = "force-dynamic";
+
+function formatJoined(createdAt) {
+  const d = new Date(createdAt);
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
 
 export default async function EditMember({ params }) {
   if (!isAdminLoggedIn()) {
@@ -12,7 +17,7 @@ export default async function EditMember({ params }) {
   const supabase = supabaseAdmin();
   const { data: member, error } = await supabase
     .from("runners")
-    .select("id, name, whatsapp, email, address, date_of_birth")
+    .select("id, name, whatsapp, email, address, date_of_birth, created_at")
     .eq("id", params.id)
     .single();
 
@@ -30,6 +35,7 @@ export default async function EditMember({ params }) {
         .mtc-back:hover { color: #F5F1EA; }
         .mtc-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #FF5A1F; margin: 0 0 8px; }
         .mtc-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 28px; margin: 0; }
+        .mtc-joined { color: #8A8A85; font-size: 13px; margin-top: 8px; font-family: 'JetBrains Mono', monospace; }
         .mtc-body { max-width: 440px; margin: 28px auto 0; padding: 0 20px; }
         .mtc-details-card { background: #141311; border: 1px solid #201F1C; border-radius: 10px; padding: 20px; text-align: left; }
         .mtc-field-label { display: block; margin-bottom: 6px; font-size: 13px; color: #8A8A85; }
@@ -48,7 +54,8 @@ export default async function EditMember({ params }) {
         <div className="mtc-hero">
           <a href="/admin" className="mtc-back">&larr; Back to members</a>
           <p className="mtc-eyebrow">Meowtain Trail Club</p>
-          <h1 className="mtc-title">Edit Member</h1>
+          <h1 className="mtc-title">{member.name}</h1>
+          <p className="mtc-joined">Joined {formatJoined(member.created_at)}</p>
         </div>
 
         <div className="mtc-body">
