@@ -4,7 +4,7 @@ import { getLoggedInRunnerId } from "../../lib/session";
 
 export const dynamic = "force-dynamic";
 
-export default async function Profile() {
+export default async function Profile({ searchParams }) {
   const runnerId = getLoggedInRunnerId();
   if (!runnerId) {
     redirect("/");
@@ -40,6 +40,7 @@ export default async function Profile() {
 
   const hours = Math.floor(totals.time / 3600);
   const minutes = Math.round((totals.time % 3600) / 60);
+  const isEditing = searchParams?.edit === "1";
 
   return (
     <main style={{ maxWidth: 480, margin: "60px auto", textAlign: "center", fontFamily: "sans-serif" }}>
@@ -56,27 +57,22 @@ export default async function Profile() {
         <p><strong>Time:</strong> {hours}h {minutes}m</p>
       </div>
 
-      <form action="/api/profile/update" method="POST" style={{ marginTop: 24, textAlign: "left", background: "#f7f7f7", padding: 20, borderRadius: 8 }}>
-        <h3 style={{ marginTop: 0 }}>My Details</h3>
+      {isEditing ? (
+        <form action="/api/profile/update" method="POST" style={{ marginTop: 24, textAlign: "left", background: "#f7f7f7", padding: 20, borderRadius: 8 }}>
+          <h3 style={{ marginTop: 0 }}>My Details</h3>
 
-        <label style={{ display: "block", marginBottom: 6, fontSize: 14 }}>WhatsApp</label>
-        <input type="text" name="whatsapp" defaultValue={runner.whatsapp || ""} placeholder="e.g. 0123456789" style={{ width: "100%", padding: 8, marginBottom: 16, boxSizing: "border-box" }} />
+          <label style={{ display: "block", marginBottom: 6, fontSize: 14 }}>WhatsApp</label>
+          <input type="text" name="whatsapp" defaultValue={runner.whatsapp || ""} placeholder="e.g. 0123456789" style={{ width: "100%", padding: 8, marginBottom: 16, boxSizing: "border-box" }} />
 
-        <label style={{ display: "block", marginBottom: 6, fontSize: 14 }}>Address</label>
-        <input type="text" name="address" defaultValue={runner.address || ""} placeholder="e.g. your delivery address" style={{ width: "100%", padding: 8, marginBottom: 16, boxSizing: "border-box" }} />
+          <label style={{ display: "block", marginBottom: 6, fontSize: 14 }}>Address</label>
+          <input type="text" name="address" defaultValue={runner.address || ""} placeholder="e.g. your delivery address" style={{ width: "100%", padding: 8, marginBottom: 16, boxSizing: "border-box" }} />
 
-        <button type="submit" style={{ padding: "10px 20px", background: "#fc4c02", color: "white", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer" }}>
-          Save
-        </button>
-      </form>
-
-      <p style={{ marginTop: 32 }}>
-        <a href="/leaderboard">View this month's leaderboard →</a>
-      </p>
-
-      <p style={{ marginTop: 16 }}>
-        <a href="/api/auth/logout" style={{ color: "#999" }}>Log out</a>
-      </p>
-    </main>
-  );
-}
+          <button type="submit" style={{ padding: "10px 20px", background: "#fc4c02", color: "white", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer" }}>
+            Save
+          </button>
+          <a href="/profile" style={{ marginLeft: 16, color: "#999" }}>Cancel</a>
+        </form>
+      ) : (
+        <div style={{ marginTop: 24, textAlign: "left", background: "#f7f7f7", padding: 20, borderRadius: 8 }}>
+          <h3 style={{ marginTop: 0 }}>My Details</h3>
+          <p><strong>WhatsApp:</strong> {runner.whatsapp || <span style={{ color: "#999" }}>Not set</span>}</p>
