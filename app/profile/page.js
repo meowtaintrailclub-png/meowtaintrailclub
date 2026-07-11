@@ -63,6 +63,10 @@ export default async function Profile() {
       <p style={{ marginTop: 32 }}>
         <a href="/leaderboard">View this month's leaderboard →</a>
       </p>
+
+      <p style={{ marginTop: 16 }}>
+        <a href="/api/auth/logout" style={{ color: "#999" }}>Log out</a>
+      </p>
     </main>
   );
 }
