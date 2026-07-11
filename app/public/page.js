@@ -115,8 +115,8 @@ export async function generateMetadata({ searchParams }) {
   return {
     title,
     description,
-    openGraph: { title, description, images: ["/Meowtain-logo.jpeg"] },
-    twitter: { card: "summary", title, description, images: ["/Meowtain-logo.jpeg"] },
+    openGraph: { title, description },
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 
