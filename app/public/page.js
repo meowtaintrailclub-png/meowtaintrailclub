@@ -131,6 +131,17 @@ export default async function PublicLeaderboard({ searchParams }) {
 
   const rows = await getLeaderboard(selectedMonth, selectedGender);
   const maxDistance = rows.length ? Math.max(...rows.map((r) => r.total_distance_m)) : 0;
+  const totalElevation = rows.reduce((sum, r) => sum + r.total_elevation_m, 0);
+
+  const shareUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/public?month=${selectedMonth}${genderSuffix}`;
+  const shareText =
+    rows.length > 0
+      ? `${rows.length} runners have climbed ${Math.round(totalElevation)}m together this ${monthLabel(selectedMonth)} at Meowtain Trail Club! See who's leading:`
+      : `Check out Meowtain Trail Club's leaderboard for ${monthLabel(selectedMonth)}:`;
+
+  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`;
+  const facebookHref = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+  const threadsHref = `https://www.threads.net/intent/post?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`;
 
   return (
     <>
@@ -160,7 +171,13 @@ export default async function PublicLeaderboard({ searchParams }) {
         .mtc-empty img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid #2A2A2A; }
         .mtc-empty p.title { color: #F5F1EA; font-weight: 600; margin: 16px 0 6px; }
         .mtc-empty p.sub { color: #8A8A85; margin: 0; font-size: 14px; }
-        .mtc-cta-wrap { max-width: 620px; margin: 30px auto 0; padding: 0 20px; text-align: center; }
+        .mtc-share-wrap { max-width: 620px; margin: 34px auto 0; padding: 0 20px; text-align: center; }
+        .mtc-share-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #5A5854; margin: 0 0 12px; }
+        .mtc-share-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        .mtc-share-btn { font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 8px; border: 1px solid #2A2A2A; color: #F5F1EA; background: #141311; text-decoration: none; cursor: pointer; }
+        .mtc-share-btn:hover { border-color: #3A3733; }
+        #mtc-more-btn { display: none; }
+        .mtc-cta-wrap { max-width: 620px; margin: 26px auto 0; padding: 0 20px; text-align: center; }
         .mtc-cta { display: inline-block; padding: 12px 28px; background: #FF5A1F; color: #0D0D0D; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }
         @media (max-width: 480px) {
           .mtc-title { font-size: 28px; }
@@ -222,10 +239,47 @@ export default async function PublicLeaderboard({ searchParams }) {
           </div>
         )}
 
+        <div className="mtc-share-wrap">
+          <p className="mtc-share-label">Share this leaderboard</p>
+          <div className="mtc-share-row">
+            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="mtc-share-btn">WhatsApp</a>
+            <a href={facebookHref} target="_blank" rel="noopener noreferrer" className="mtc-share-btn">Facebook</a>
+            <a href={threadsHref} target="_blank" rel="noopener noreferrer" className="mtc-share-btn">Threads</a>
+            <button id="mtc-copy-btn" className="mtc-share-btn">Copy Link</button>
+            <button id="mtc-more-btn" className="mtc-share-btn">More options&hellip;</button>
+          </div>
+        </div>
+
         <div className="mtc-cta-wrap">
           <a href="/" className="mtc-cta">Join Meowtain Trail Club</a>
         </div>
       </div>
+
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            document.getElementById('mtc-copy-btn').addEventListener('click', function () {
+              navigator.clipboard.writeText(${JSON.stringify(shareUrl)}).then(function () {
+                var btn = document.getElementById('mtc-copy-btn');
+                var original = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(function () { btn.textContent = original; }, 1500);
+              });
+            });
+            if (navigator.share) {
+              var moreBtn = document.getElementById('mtc-more-btn');
+              moreBtn.style.display = 'inline-block';
+              moreBtn.addEventListener('click', function () {
+                navigator.share({
+                  title: 'Meowtain Trail Club',
+                  text: ${JSON.stringify(shareText)},
+                  url: ${JSON.stringify(shareUrl)},
+                }).catch(function () {});
+              });
+            }
+          `,
+        }}
+      />
     </>
   );
 }
