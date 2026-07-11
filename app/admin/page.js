@@ -70,7 +70,7 @@ export default async function AdminPage() {
         .mtc-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #FF5A1F; margin: 0 0 8px; }
         .mtc-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 32px; margin: 0; }
         .mtc-count { color: #8A8A85; font-size: 13px; margin-top: 6px; }
-        .mtc-admin-body { max-width: 1100px; margin: 24px auto 0; padding: 0 20px; }
+        .mtc-admin-body { max-width: 1150px; margin: 24px auto 0; padding: 0 20px; }
         .mtc-table-wrap { overflow-x: auto; border: 1px solid #201F1C; border-radius: 10px; }
         .mtc-table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
         .mtc-table th { text-align: left; padding: 12px 14px; background: #141311; color: #8A8A85; font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #201F1C; }
@@ -78,6 +78,8 @@ export default async function AdminPage() {
         .mtc-table tr:last-child td { border-bottom: none; }
         .mtc-table td.muted { color: #5A5854; font-style: italic; }
         .mtc-table td.stat { font-family: 'JetBrains Mono', monospace; color: #FF5A1F; }
+        .mtc-edit-link { color: #FF5A1F; text-decoration: none; font-weight: 600; font-size: 13px; }
+        .mtc-edit-link:hover { text-decoration: underline; }
         .mtc-links { text-align: center; margin-top: 24px; }
         .mtc-links a { color: #8A8A85; text-decoration: none; font-size: 13px; }
         .mtc-links a:hover { color: #F5F1EA; }
@@ -105,6 +107,7 @@ export default async function AdminPage() {
                   <th>Elevation</th>
                   <th>Time</th>
                   <th>Activities</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -120,6 +123,7 @@ export default async function AdminPage() {
                     <td className="stat">{Math.round(m.stats.elevation)} m</td>
                     <td className="stat">{formatTime(m.stats.time)}</td>
                     <td className="stat">{m.stats.count}</td>
+                    <td><a href={`/admin/members/${m.id}`} className="mtc-edit-link">Edit</a></td>
                   </tr>
                 ))}
               </tbody>
