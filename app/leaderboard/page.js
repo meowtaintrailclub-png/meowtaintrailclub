@@ -154,13 +154,7 @@ export default async function Leaderboard({ searchParams }) {
 
           <div className="mtc-month-nav">
             {monthsToShow.map((m) => (
-              
-                key={m}
-                href={`/leaderboard?month=${m}`}
-                className={`mtc-month-pill ${m === selectedMonth ? "active" : ""}`}
-              >
-                {monthLabel(m)}
-              </a>
+              <a key={m} href={`/leaderboard?month=${m}`} className={`mtc-month-pill ${m === selectedMonth ? "active" : ""}`}>{monthLabel(m)}</a>
             ))}
           </div>
         </div>
