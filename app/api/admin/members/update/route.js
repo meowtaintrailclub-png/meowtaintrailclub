@@ -14,11 +14,12 @@ export async function POST(request) {
   const email = formData.get("email") || "";
   const address = formData.get("address") || "";
   const date_of_birth = formData.get("date_of_birth") || null;
+  const gender = formData.get("gender") || null;
 
   const supabase = supabaseAdmin();
   const { error } = await supabase
     .from("runners")
-    .update({ name, whatsapp, email, address, date_of_birth })
+    .update({ name, whatsapp, email, address, date_of_birth, gender })
     .eq("id", runnerId);
 
   if (error) throw error;
