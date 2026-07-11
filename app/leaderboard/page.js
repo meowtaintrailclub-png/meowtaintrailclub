@@ -33,13 +33,15 @@ async function getAvailableMonths() {
   return Array.from(months);
 }
 
-async function getLeaderboard(monthStr) {
+async function getLeaderboard(monthStr, gender) {
   const supabase = supabaseAdmin();
   const { start, end } = monthBounds(monthStr);
 
-  const { data: runners, error: runnersError } = await supabase
-    .from("runners")
-    .select("id, name, avatar_url");
+  let runnersQuery = supabase.from("runners").select("id, name, avatar_url, gender");
+  if (gender !== "all") {
+    runnersQuery = runnersQuery.eq("gender", gender);
+  }
+  const { data: runners, error: runnersError } = await runnersQuery;
   if (runnersError) throw runnersError;
 
   const { data: activities, error: activitiesError } = await supabase
@@ -102,7 +104,11 @@ export default async function Leaderboard({ searchParams }) {
   const selectedMonth =
     requestedMonth && /^\d{4}-\d{2}$/.test(requestedMonth) ? requestedMonth : currentMonth;
 
-  const rows = await getLeaderboard(selectedMonth);
+  const requestedGender = searchParams?.gender;
+  const selectedGender = ["male", "female"].includes(requestedGender) ? requestedGender : "all";
+  const genderSuffix = selectedGender !== "all" ? `&gender=${selectedGender}` : "";
+
+  const rows = await getLeaderboard(selectedMonth, selectedGender);
   const maxDistance = rows.length ? Math.max(...rows.map((r) => r.total_distance_m)) : 0;
 
   return (
@@ -116,7 +122,8 @@ export default async function Leaderboard({ searchParams }) {
         .mtc-back:hover { color: #F5F1EA; }
         .mtc-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #FF5A1F; margin: 0 0 8px; }
         .mtc-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 34px; margin: 0 0 20px; letter-spacing: -0.01em; }
-        .mtc-month-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; justify-content: center; flex-wrap: wrap; }
+        .mtc-filter-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #5A5854; margin: 0 0 8px; }
+        .mtc-month-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; justify-content: center; flex-wrap: wrap; margin-bottom: 4px; }
         .mtc-month-pill { flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 7px 14px; border-radius: 20px; border: 1px solid #2A2A2A; color: #8A8A85; text-decoration: none; }
         .mtc-month-pill:hover { border-color: #3A3733; color: #F5F1EA; }
         .mtc-month-pill.active { background: #FF5A1F; border-color: #FF5A1F; color: #0D0D0D; font-weight: 600; }
@@ -152,10 +159,18 @@ export default async function Leaderboard({ searchParams }) {
           <p className="mtc-eyebrow">Meowtain Trail Club</p>
           <h1 className="mtc-title">{monthLabel(selectedMonth)}</h1>
 
+          <p className="mtc-filter-label">Period</p>
           <div className="mtc-month-nav">
             {monthsToShow.map((m) => (
-              <a key={m} href={`/leaderboard?month=${m}`} className={`mtc-month-pill ${m === selectedMonth ? "active" : ""}`}>{monthLabel(m)}</a>
+              <a key={m} href={`/leaderboard?month=${m}${genderSuffix}`} className={`mtc-month-pill ${m === selectedMonth ? "active" : ""}`}>{monthLabel(m)}</a>
             ))}
+          </div>
+
+          <p className="mtc-filter-label">Gender</p>
+          <div className="mtc-month-nav">
+            <a href={`/leaderboard?month=${selectedMonth}`} className={`mtc-month-pill ${selectedGender === "all" ? "active" : ""}`}>All</a>
+            <a href={`/leaderboard?month=${selectedMonth}&gender=male`} className={`mtc-month-pill ${selectedGender === "male" ? "active" : ""}`}>Male</a>
+            <a href={`/leaderboard?month=${selectedMonth}&gender=female`} className={`mtc-month-pill ${selectedGender === "female" ? "active" : ""}`}>Female</a>
           </div>
         </div>
 
