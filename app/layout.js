@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Go-Tribe",
-  description: "Monthly running challenge leaderboard",
+  title: "Meowtain Trail Club",
+  description: "Monthly trail running challenge leaderboard",
 };
 
 export default function RootLayout({ children }) {
