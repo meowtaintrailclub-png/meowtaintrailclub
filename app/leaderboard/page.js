@@ -4,12 +4,41 @@ import { supabaseAdmin } from "../../lib/supabase";
 
 async function getLeaderboard() {
   const supabase = supabaseAdmin();
-  const { data, error } = await supabase
-    .from("leaderboard")
-    .select("*")
-    .order("total_elevation_m", { ascending: false });
-  if (error) throw error;
-  return data;
+
+  const { data: runners, error: runnersError } = await supabase
+    .from("runners")
+    .select("id, name, avatar_url");
+  if (runnersError) throw runnersError;
+
+  const { data: activities, error: activitiesError } = await supabase
+    .from("activities")
+    .select("runner_id, distance_m, elevation_gain_m, moving_time_s");
+  if (activitiesError) throw activitiesError;
+
+  const totals = {};
+  for (const runner of runners) {
+    totals[runner.id] = {
+      runner_id: runner.id,
+      name: runner.name,
+      avatar_url: runner.avatar_url,
+      total_distance_m: 0,
+      total_elevation_m: 0,
+      total_moving_time_s: 0,
+      activity_count: 0,
+    };
+  }
+  for (const activity of activities) {
+    const t = totals[activity.runner_id];
+    if (!t) continue;
+    t.total_distance_m += Number(activity.distance_m) || 0;
+    t.total_elevation_m += Number(activity.elevation_gain_m) || 0;
+    t.total_moving_time_s += Number(activity.moving_time_s) || 0;
+    t.activity_count += 1;
+  }
+
+  return Object.values(totals)
+    .filter((r) => r.activity_count > 0)
+    .sort((a, b) => b.total_elevation_m - a.total_elevation_m);
 }
 
 function formatTime(totalSeconds) {
