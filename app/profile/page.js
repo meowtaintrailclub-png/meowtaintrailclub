@@ -14,7 +14,7 @@ export default async function Profile() {
 
   const { data: runner, error: runnerError } = await supabase
     .from("runners")
-    .select("id, name, avatar_url")
+    .select("id, name, avatar_url, whatsapp, address")
     .eq("id", runnerId)
     .single();
   if (runnerError || !runner) {
@@ -59,6 +59,47 @@ export default async function Profile() {
         <p><strong>Elevation:</strong> {Math.round(totals.elevation)} m</p>
         <p><strong>Time:</strong> {hours}h {minutes}m</p>
       </div>
+
+      <form
+        action="/api/profile/update"
+        method="POST"
+        style={{ marginTop: 24, textAlign: "left", background: "#f7f7f7", padding: 20, borderRadius: 8 }}
+      >
+        <h3 style={{ marginTop: 0 }}>My Details</h3>
+
+        <label style={{ display: "block", marginBottom: 6, fontSize: 14 }}>WhatsApp</label>
+        <input
+          type="text"
+          name="whatsapp"
+          defaultValue={runner.whatsapp || ""}
+          placeholder="e.g. 0123456789"
+          style={{ width: "100%", padding: 8, marginBottom: 16, boxSizing: "border-box" }}
+        />
+
+        <label style={{ display: "block", marginBottom: 6, fontSize: 14 }}>Address</label>
+        <input
+          type="text"
+          name="address"
+          defaultValue={runner.address || ""}
+          placeholder="e.g. your delivery address"
+          style={{ width: "100%", padding: 8, marginBottom: 16, boxSizing: "border-box" }}
+        />
+
+        <button
+          type="submit"
+          style={{
+            padding: "10px 20px",
+            background: "#fc4c02",
+            color: "white",
+            border: "none",
+            borderRadius: 6,
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          Save
+        </button>
+      </form>
 
       <p style={{ marginTop: 32 }}>
         <a href="/leaderboard">View this month's leaderboard →</a>
