@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "../../lib/supabase";
+javascriptimport { supabaseAdmin } from "../../lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +40,16 @@ async function getAvailableMonths() {
     months.add(monthKey(a.started_at));
   }
   return Array.from(months);
+}
+
+async function getRewards(monthStr) {
+  const supabase = supabaseAdmin();
+  const { data } = await supabase
+    .from("challenge_rewards")
+    .select("prizes, lucky_draw")
+    .eq("month", monthStr)
+    .maybeSingle();
+  return data;
 }
 
 async function getLeaderboard(monthStr, gender) {
@@ -130,6 +140,7 @@ export default async function PublicLeaderboard({ searchParams }) {
   const genderSuffix = selectedGender !== "all" ? `&gender=${selectedGender}` : "";
 
   const rows = await getLeaderboard(selectedMonth, selectedGender);
+  const rewards = await getRewards(selectedMonth);
   const maxDistance = rows.length ? Math.max(...rows.map((r) => r.total_distance_m)) : 0;
   const totalElevation = rows.reduce((sum, r) => sum + r.total_elevation_m, 0);
 
@@ -158,6 +169,11 @@ export default async function PublicLeaderboard({ searchParams }) {
         .mtc-month-pill { flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 7px 14px; border-radius: 20px; border: 1px solid #2A2A2A; color: #8A8A85; text-decoration: none; }
         .mtc-month-pill:hover { border-color: #3A3733; color: #F5F1EA; }
         .mtc-month-pill.active { background: #FF5A1F; border-color: #FF5A1F; color: #0D0D0D; font-weight: 600; }
+        .mtc-rewards-wrap { max-width: 620px; margin: 24px auto 0; padding: 0 20px; }
+        .mtc-rewards-card { background: #141311; border: 1px solid #2A2A2A; border-radius: 10px; padding: 18px 20px; }
+        .mtc-rewards-section + .mtc-rewards-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid #201F1C; }
+        .mtc-rewards-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #FF5A1F; margin: 0 0 6px; }
+        .mtc-rewards-text { color: #E8E4DC; font-size: 14px; line-height: 1.6; margin: 0; white-space: pre-line; text-align: left; }
         .mtc-list { max-width: 620px; margin: 28px auto 0; padding: 0 20px; }
         .mtc-card { background: #141311; border: 1px solid #201F1C; border-radius: 10px; padding: 16px 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; }
         .mtc-rank { flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 14px; }
@@ -208,6 +224,25 @@ export default async function PublicLeaderboard({ searchParams }) {
             <a href={`/public?month=${selectedMonth}&gender=female`} className={`mtc-month-pill ${selectedGender === "female" ? "active" : ""}`}>Female</a>
           </div>
         </div>
+
+        {(rewards?.prizes || rewards?.lucky_draw) && (
+          <div className="mtc-rewards-wrap">
+            <div className="mtc-rewards-card">
+              {rewards.prizes && (
+                <div className="mtc-rewards-section">
+                  <p className="mtc-rewards-label">This Month's Prizes</p>
+                  <p className="mtc-rewards-text">{rewards.prizes}</p>
+                </div>
+              )}
+              {rewards.lucky_draw && (
+                <div className="mtc-rewards-section">
+                  <p className="mtc-rewards-label">Lucky Draw</p>
+                  <p className="mtc-rewards-text">{rewards.lucky_draw}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {rows.length === 0 ? (
           <div className="mtc-empty">
