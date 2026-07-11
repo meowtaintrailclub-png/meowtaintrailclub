@@ -138,7 +138,7 @@ export default async function PublicLeaderboard({ searchParams }) {
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
         .mtc-page { min-height: 100vh; background: #0D0D0D; color: #F5F1EA; font-family: 'Inter', sans-serif; padding-bottom: 60px; }
         .mtc-hero { padding: 40px 24px 20px; text-align: center; border-bottom: 1px solid #201F1C; }
-        .mtc-logo { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 1px solid #2A2A2A; margin-bottom: 16px; }
+        .mtc-logo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #2A2A2A; margin-bottom: 14px; }
         .mtc-badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #8A8A85; border: 1px solid #2A2A2A; border-radius: 20px; padding: 4px 12px; margin-bottom: 16px; }
         .mtc-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #FF5A1F; margin: 0 0 8px; }
         .mtc-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 34px; margin: 0 0 20px; letter-spacing: -0.01em; }
