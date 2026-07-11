@@ -4,6 +4,12 @@ import { getLoggedInRunnerId } from "../../lib/session";
 
 export const dynamic = "force-dynamic";
 
+function formatDob(dob) {
+  if (!dob) return null;
+  const d = new Date(dob);
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
+
 export default async function Profile({ searchParams }) {
   const runnerId = getLoggedInRunnerId();
   if (!runnerId) {
@@ -14,7 +20,7 @@ export default async function Profile({ searchParams }) {
 
   const { data: runner, error: runnerError } = await supabase
     .from("runners")
-    .select("id, name, avatar_url, whatsapp, address")
+    .select("id, name, avatar_url, whatsapp, address, date_of_birth")
     .eq("id", runnerId)
     .single();
   if (runnerError || !runner) {
@@ -109,6 +115,8 @@ export default async function Profile({ searchParams }) {
               <input type="text" name="whatsapp" defaultValue={runner.whatsapp || ""} placeholder="e.g. 0123456789" className="mtc-field-input" />
               <label className="mtc-field-label">Address</label>
               <input type="text" name="address" defaultValue={runner.address || ""} placeholder="e.g. your delivery address" className="mtc-field-input" />
+              <label className="mtc-field-label">Date of Birth</label>
+              <input type="date" name="date_of_birth" defaultValue={runner.date_of_birth || ""} className="mtc-field-input" />
               <button type="submit" className="mtc-btn-primary">Save</button>
               <a href="/profile" className="mtc-btn-ghost">Cancel</a>
             </form>
@@ -122,6 +130,10 @@ export default async function Profile({ searchParams }) {
               <div className="mtc-detail-row">
                 <span className="mtc-detail-label">Address</span>
                 <span className={`mtc-detail-value ${!runner.address ? "empty" : ""}`}>{runner.address || "Not set"}</span>
+              </div>
+              <div className="mtc-detail-row">
+                <span className="mtc-detail-label">Date of Birth</span>
+                <span className={`mtc-detail-value ${!runner.date_of_birth ? "empty" : ""}`}>{formatDob(runner.date_of_birth) || "Not set"}</span>
               </div>
               <div style={{ marginTop: 16 }}>
                 <a href="/profile?edit=1" className="mtc-btn-primary">Edit</a>
