@@ -13,6 +13,7 @@ export default function Legal() {
         .mtc-legal-updated { color: #5A5854; font-size: 13px; margin: 0 0 36px; }
         .mtc-legal h2 { font-size: 17px; margin: 32px 0 10px; }
         .mtc-legal p { color: #B8B4AC; font-size: 14px; line-height: 1.7; margin: 0 0 12px; }
+        .mtc-legal a.inline { color: #FF5A1F; text-decoration: underline; }
       `}</style>
 
       <main className="mtc-legal">
@@ -50,7 +51,18 @@ export default function Legal() {
           <p>
             You can update your WhatsApp, email, address, and date of birth at any time from your
             profile page. To request full removal of your data from Meowtain Trail Club, contact
-            a club admin directly.
+            us at{" "}
+            <a href="mailto:meowtaintrailclub@gmail.com" className="inline">
+              meowtaintrailclub@gmail.com
+            </a>.
+          </p>
+
+          <h2>Contact</h2>
+          <p>
+            Questions about the club, this website, or your data can be sent to{" "}
+            <a href="mailto:meowtaintrailclub@gmail.com" className="inline">
+              meowtaintrailclub@gmail.com
+            </a>.
           </p>
         </div>
       </main>
