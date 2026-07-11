@@ -144,7 +144,7 @@ export default async function AdminPage({ searchParams }) {
         .mtc-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #FF5A1F; margin: 0 0 8px; }
         .mtc-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 32px; margin: 0; }
         .mtc-count { color: #8A8A85; font-size: 13px; margin-top: 6px; }
-        .mtc-nav-row { margin-top: 16px; }
+        .mtc-nav-row { margin-top: 16px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
         .mtc-nav-row a { font-size: 13px; color: #FF5A1F; text-decoration: none; font-weight: 600; }
         .mtc-nav-row a:hover { text-decoration: underline; }
         .mtc-admin-body { max-width: 900px; margin: 24px auto 0; padding: 0 20px; }
@@ -176,6 +176,7 @@ export default async function AdminPage({ searchParams }) {
           </p>
           <p className="mtc-nav-row">
             <a href="/admin/prizes">Manage Prizes &amp; Lucky Draw &rarr;</a>
+            <a href="/admin/sponsors">Manage Sponsors &rarr;</a>
           </p>
         </div>
 
