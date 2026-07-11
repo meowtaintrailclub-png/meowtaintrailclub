@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+javascriptimport { redirect } from "next/navigation";
 import { supabaseAdmin } from "../../lib/supabase";
 import { isAdminLoggedIn } from "../../lib/adminSession";
 
@@ -31,17 +31,6 @@ function tierForElevation(elevationM) {
   return null;
 }
 
-function formatDob(dob) {
-  if (!dob) return "-";
-  const d = new Date(dob);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
-
-function formatJoined(createdAt) {
-  const d = new Date(createdAt);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
-
 function formatTime(totalSeconds) {
   const seconds = Number(totalSeconds) || 0;
   const hours = Math.floor(seconds / 3600);
@@ -65,7 +54,7 @@ async function getMembers(selectedMonth) {
 
   const { data: runners, error: runnersError } = await supabase
     .from("runners")
-    .select("id, name, whatsapp, email, address, date_of_birth, created_at")
+    .select("id, name, created_at")
     .order("created_at", { ascending: false });
   if (runnersError) throw runnersError;
 
@@ -138,21 +127,20 @@ export default async function AdminPage({ searchParams }) {
         .mtc-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #FF5A1F; margin: 0 0 8px; }
         .mtc-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 32px; margin: 0; }
         .mtc-count { color: #8A8A85; font-size: 13px; margin-top: 6px; }
-        .mtc-admin-body { max-width: 1150px; margin: 24px auto 0; padding: 0 20px; }
+        .mtc-admin-body { max-width: 900px; margin: 24px auto 0; padding: 0 20px; }
         .mtc-filter-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #5A5854; margin: 0 0 8px; }
         .mtc-filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
         .mtc-filter-pill { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 7px 14px; border-radius: 20px; border: 1px solid #2A2A2A; color: #8A8A85; text-decoration: none; }
         .mtc-filter-pill:hover { border-color: #3A3733; color: #F5F1EA; }
         .mtc-filter-pill.active { background: #FF5A1F; border-color: #FF5A1F; color: #0D0D0D; font-weight: 600; }
         .mtc-table-wrap { overflow-x: auto; border: 1px solid #201F1C; border-radius: 10px; }
-        .mtc-table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+        .mtc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .mtc-table th { text-align: left; padding: 12px 14px; background: #141311; color: #8A8A85; font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #201F1C; }
         .mtc-table td { padding: 12px 14px; border-bottom: 1px solid #201F1C; color: #F5F1EA; }
         .mtc-table tr:last-child td { border-bottom: none; }
-        .mtc-table td.muted { color: #5A5854; font-style: italic; }
         .mtc-table td.stat { font-family: 'JetBrains Mono', monospace; color: #FF5A1F; }
-        .mtc-edit-link { color: #FF5A1F; text-decoration: none; font-weight: 600; font-size: 13px; }
-        .mtc-edit-link:hover { text-decoration: underline; }
+        .mtc-name-link { color: #F5F1EA; text-decoration: none; font-weight: 600; }
+        .mtc-name-link:hover { color: #FF5A1F; }
         .mtc-empty-row { text-align: center; color: #8A8A85; padding: 30px 14px; }
         .mtc-links { text-align: center; margin-top: 24px; }
         .mtc-links a { color: #8A8A85; text-decoration: none; font-size: 13px; }
@@ -190,37 +178,25 @@ export default async function AdminPage({ searchParams }) {
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>WhatsApp</th>
-                  <th>Email</th>
-                  <th>Address</th>
-                  <th>DOB</th>
-                  <th>Joined</th>
                   <th>Distance</th>
                   <th>Elevation</th>
                   <th>Time</th>
                   <th>Activities</th>
-                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {members.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="mtc-empty-row">No runners match this filter.</td>
+                    <td colSpan={5} className="mtc-empty-row">No runners match this filter.</td>
                   </tr>
                 ) : (
                   members.map((m) => (
                     <tr key={m.id}>
-                      <td>{m.name}</td>
-                      <td className={!m.whatsapp ? "muted" : ""}>{m.whatsapp || "Not set"}</td>
-                      <td className={!m.email ? "muted" : ""}>{m.email || "Not set"}</td>
-                      <td className={!m.address ? "muted" : ""}>{m.address || "Not set"}</td>
-                      <td>{formatDob(m.date_of_birth)}</td>
-                      <td>{formatJoined(m.created_at)}</td>
+                      <td><a href={`/admin/members/${m.id}`} className="mtc-name-link">{m.name}</a></td>
                       <td className="stat">{(m.stats.distance / 1000).toFixed(1)} km</td>
                       <td className="stat">{Math.round(m.stats.elevation)} m</td>
                       <td className="stat">{formatTime(m.stats.time)}</td>
                       <td className="stat">{m.stats.count}</td>
-                      <td><a href={`/admin/members/${m.id}`} className="mtc-edit-link">Edit</a></td>
                     </tr>
                   ))
                 )}
