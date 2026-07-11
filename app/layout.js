@@ -1,4 +1,4 @@
-xport const metadata = {
+export const metadata = {
   title: "Meowtain Trail Club",
   description: "Monthly trail running challenge leaderboard",
   icons: {
