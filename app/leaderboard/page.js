@@ -1,6 +1,8 @@
 export const dynamic = "force-dynamic";
 
+import { redirect } from "next/navigation";
 import { supabaseAdmin } from "../../lib/supabase";
+import { getLoggedInRunnerId } from "../../lib/session";
 
 async function getLeaderboard() {
   const supabase = supabaseAdmin();
@@ -49,10 +51,16 @@ function formatTime(totalSeconds) {
 }
 
 export default async function Leaderboard() {
+  const runnerId = getLoggedInRunnerId();
+  if (!runnerId) {
+    redirect("/");
+  }
+
   const rows = await getLeaderboard();
 
   return (
     <main style={{ maxWidth: 640, margin: "40px auto", fontFamily: "sans-serif" }}>
+      <p><a href="/profile">← Back to my profile</a></p>
       <h1>This Month's Leaderboard</h1>
       <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 24 }}>
         <thead>
