@@ -64,14 +64,17 @@ export default async function Home() {
         .mtc-stat-value { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600; color: #FF5A1F; }
         .mtc-stat-label { font-size: 11px; color: #8A8A85; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
         .mtc-stats-fallback { text-align: center; color: #8A8A85; font-size: 14px; max-width: 480px; margin: 0 auto; }
-        .mtc-how { max-width: 760px; margin: 0 auto; padding: 56px 24px; }
+        .mtc-how { max-width: 800px; margin: 0 auto; padding: 56px 24px; }
         .mtc-how-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; text-align: center; margin: 0 0 40px; }
-        .mtc-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .mtc-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
         .mtc-step { text-align: center; }
         .mtc-step-icon { width: 44px; height: 44px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; border: 1px solid #2A2A2A; border-radius: 50%; }
         .mtc-step-title { font-weight: 600; font-size: 15px; margin: 0 0 6px; }
         .mtc-step-desc { color: #8A8A85; font-size: 13px; line-height: 1.5; margin: 0; }
         .mtc-footer { text-align: center; padding: 30px 24px 50px; color: #5A5854; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+        @media (max-width: 700px) and (min-width: 521px) {
+          .mtc-steps { grid-template-columns: repeat(2, 1fr); row-gap: 32px; }
+        }
         @media (max-width: 520px) {
           .mtc-headline { font-size: 32px; }
           .mtc-steps { grid-template-columns: 1fr; gap: 32px; }
@@ -156,6 +159,17 @@ export default async function Home() {
               </div>
               <p className="mtc-step-title">Climb</p>
               <p className="mtc-step-desc">See where you rank on this month's leaderboard, reset every month.</p>
+            </div>
+            <div className="mtc-step">
+              <div className="mtc-step-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF5A1F" strokeWidth="1.6">
+                  <path d="M7 4h10v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V4Z" strokeLinejoin="round" />
+                  <path d="M7 5H4a3 3 0 0 0 3 4M17 5h3a3 3 0 0 1-3 4" strokeLinecap="round" />
+                  <path d="M12 12v3M9 19h6M10 19v-2.5h4V19" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <p className="mtc-step-title">Earn Rewards</p>
+              <p className="mtc-step-desc">Top climbers win prizes when each month's challenge wraps up.</p>
             </div>
           </div>
         </div>
