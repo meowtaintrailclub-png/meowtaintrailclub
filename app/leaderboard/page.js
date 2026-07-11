@@ -12,6 +12,12 @@ async function getLeaderboard() {
   return data;
 }
 
+function formatTime(totalSeconds) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.round((totalSeconds % 3600) / 60);
+  return `${hours}h ${minutes}m`;
+}
+
 export default async function Leaderboard() {
   const rows = await getLeaderboard();
 
@@ -25,6 +31,7 @@ export default async function Leaderboard() {
             <th style={{ padding: 8 }}>Runner</th>
             <th style={{ padding: 8 }}>Elevation (m)</th>
             <th style={{ padding: 8 }}>Distance (km)</th>
+            <th style={{ padding: 8 }}>Time</th>
             <th style={{ padding: 8 }}>Activities</th>
           </tr>
         </thead>
@@ -35,6 +42,7 @@ export default async function Leaderboard() {
               <td style={{ padding: 8 }}>{r.name}</td>
               <td style={{ padding: 8 }}>{Math.round(r.total_elevation_m)}</td>
               <td style={{ padding: 8 }}>{(r.total_distance_m / 1000).toFixed(1)}</td>
+              <td style={{ padding: 8 }}>{formatTime(r.total_moving_time_s)}</td>
               <td style={{ padding: 8 }}>{r.activity_count}</td>
             </tr>
           ))}
