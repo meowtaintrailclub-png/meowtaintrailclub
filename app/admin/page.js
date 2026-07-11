@@ -49,13 +49,17 @@ async function getAvailableMonths() {
   return Array.from(months);
 }
 
-async function getMembers(selectedMonth) {
+async function getMembers(selectedMonth, gender) {
   const supabase = supabaseAdmin();
 
-  const { data: runners, error: runnersError } = await supabase
+  let runnersQuery = supabase
     .from("runners")
-    .select("id, name, created_at")
+    .select("id, name, created_at, gender")
     .order("created_at", { ascending: false });
+  if (gender !== "all") {
+    runnersQuery = runnersQuery.eq("gender", gender);
+  }
+  const { data: runners, error: runnersError } = await runnersQuery;
   if (runnersError) throw runnersError;
 
   let activitiesQuery = supabase
@@ -109,9 +113,22 @@ export default async function AdminPage({ searchParams }) {
 
   const requestedTier = searchParams?.tier;
   const selectedTier = TIERS.includes(Number(requestedTier)) ? Number(requestedTier) : "all";
-  const tierSuffix = selectedTier !== "all" ? `&tier=${selectedTier}` : "";
 
-  const allMembers = await getMembers(selectedMonth);
+  const requestedGender = searchParams?.gender;
+  const selectedGender = ["male", "female"].includes(requestedGender) ? requestedGender : "all";
+
+  const qs = (overrides) => {
+    const params = new URLSearchParams();
+    const month = overrides.month ?? selectedMonth;
+    const tier = overrides.tier ?? selectedTier;
+    const gender = overrides.gender ?? selectedGender;
+    params.set("month", month);
+    if (tier !== "all") params.set("tier", tier);
+    if (gender !== "all") params.set("gender", gender);
+    return `/admin?${params.toString()}`;
+  };
+
+  const allMembers = await getMembers(selectedMonth, selectedGender);
 
   const members =
     selectedTier === "all"
@@ -159,18 +176,25 @@ export default async function AdminPage({ searchParams }) {
         <div className="mtc-admin-body">
           <p className="mtc-filter-label">Period</p>
           <div className="mtc-filter-row">
-            <a href={`/admin?month=all${tierSuffix}`} className={`mtc-filter-pill ${selectedMonth === "all" ? "active" : ""}`}>All time</a>
+            <a href={qs({ month: "all" })} className={`mtc-filter-pill ${selectedMonth === "all" ? "active" : ""}`}>All time</a>
             {monthsToShow.map((m) => (
-              <a key={m} href={`/admin?month=${m}${tierSuffix}`} className={`mtc-filter-pill ${m === selectedMonth ? "active" : ""}`}>{monthLabel(m)}</a>
+              <a key={m} href={qs({ month: m })} className={`mtc-filter-pill ${m === selectedMonth ? "active" : ""}`}>{monthLabel(m)}</a>
             ))}
           </div>
 
           <p className="mtc-filter-label">Elevation Tier</p>
           <div className="mtc-filter-row">
-            <a href={`/admin?month=${selectedMonth}`} className={`mtc-filter-pill ${selectedTier === "all" ? "active" : ""}`}>All</a>
+            <a href={qs({ tier: "all" })} className={`mtc-filter-pill ${selectedTier === "all" ? "active" : ""}`}>All</a>
             {TIERS.map((t) => (
-              <a key={t} href={`/admin?month=${selectedMonth}&tier=${t}`} className={`mtc-filter-pill ${t === selectedTier ? "active" : ""}`}>{t}m</a>
+              <a key={t} href={qs({ tier: t })} className={`mtc-filter-pill ${t === selectedTier ? "active" : ""}`}>{t}m</a>
             ))}
+          </div>
+
+          <p className="mtc-filter-label">Gender</p>
+          <div className="mtc-filter-row">
+            <a href={qs({ gender: "all" })} className={`mtc-filter-pill ${selectedGender === "all" ? "active" : ""}`}>All</a>
+            <a href={qs({ gender: "male" })} className={`mtc-filter-pill ${selectedGender === "male" ? "active" : ""}`}>Male</a>
+            <a href={qs({ gender: "female" })} className={`mtc-filter-pill ${selectedGender === "female" ? "active" : ""}`}>Female</a>
           </div>
 
           <div className="mtc-table-wrap">
