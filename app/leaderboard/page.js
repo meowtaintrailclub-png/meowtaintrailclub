@@ -1,13 +1,13 @@
 export const dynamic = "force-dynamic";
 
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "../../lib/supabase";
 
 async function getLeaderboard() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
-  const { data, error } = await supabase.from("leaderboard").select("*");
+  const supabase = supabaseAdmin();
+  const { data, error } = await supabase
+    .from("leaderboard")
+    .select("*")
+    .order("total_elevation_m", { ascending: false });
   if (error) throw error;
   return data;
 }
@@ -23,6 +23,7 @@ export default async function Leaderboard() {
           <tr style={{ textAlign: "left", borderBottom: "2px solid #333" }}>
             <th style={{ padding: 8 }}>#</th>
             <th style={{ padding: 8 }}>Runner</th>
+            <th style={{ padding: 8 }}>Elevation (m)</th>
             <th style={{ padding: 8 }}>Distance (km)</th>
             <th style={{ padding: 8 }}>Activities</th>
           </tr>
@@ -32,6 +33,7 @@ export default async function Leaderboard() {
             <tr key={r.runner_id} style={{ borderBottom: "1px solid #eee" }}>
               <td style={{ padding: 8 }}>{i + 1}</td>
               <td style={{ padding: 8 }}>{r.name}</td>
+              <td style={{ padding: 8 }}>{Math.round(r.total_elevation_m)}</td>
               <td style={{ padding: 8 }}>{(r.total_distance_m / 1000).toFixed(1)}</td>
               <td style={{ padding: 8 }}>{r.activity_count}</td>
             </tr>
