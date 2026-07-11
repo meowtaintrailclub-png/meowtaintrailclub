@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabase";
 import { getValidAccessToken, fetchActivity } from "../../../../lib/strava";
 
-// Vercel Cron hits this on a schedule (see vercel.json). Protect it with a shared secret
-// so randoms on the internet can't trigger it.
 export async function GET(request) {
   const auth = request.headers.get("authorization");
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -32,8 +30,14 @@ export async function GET(request) {
           const accessToken = await getValidAccessToken(supabase, runner);
           const activity = await fetchActivity(accessToken, event.object_id);
 
-          // Only keep run/trail-run activities - adjust this filter to taste
-          if (["Run", "TrailRun"].includes(activity.type ?? activity.sport_type)) {
+          const isRun = ["Run", "TrailRun"].includes(activity.type ?? activity.sport_type);
+
+          // Only count activities from the day the runner joined, onward.
+          const joinDate = new Date(runner.created_at).toISOString().slice(0, 10);
+          const activityDate = new Date(activity.start_date).toISOString().slice(0, 10);
+          const isAfterJoining = activityDate >= joinDate;
+
+          if (isRun && isAfterJoining) {
             await supabase.from("activities").upsert(
               {
                 strava_activity_id: activity.id,
@@ -58,7 +62,6 @@ export async function GET(request) {
       handled++;
     } catch (err) {
       console.error("Failed processing event", event.id, err);
-      // leave processed = false so it retries next run
     }
   }
 
