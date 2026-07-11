@@ -13,8 +13,9 @@ async function getLeaderboard() {
 }
 
 function formatTime(totalSeconds) {
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.round((totalSeconds % 3600) / 60);
+  const seconds = Number(totalSeconds) || 0;
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.round((seconds % 3600) / 60);
   return `${hours}h ${minutes}m`;
 }
 
