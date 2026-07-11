@@ -50,15 +50,6 @@ function formatTime(totalSeconds) {
   return `${hours}h ${minutes}m`;
 }
 
-function MountainMark({ size = 22 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <path d="M2 24L11 9L16 17L20 11L30 24H2Z" stroke="#FF5A1F" strokeWidth="1.6" strokeLinejoin="round" />
-      <circle cx="11" cy="6" r="1.6" fill="#FF5A1F" />
-    </svg>
-  );
-}
-
 function rankBadgeStyle(i) {
   if (i === 0) return { background: "#FF5A1F", border: "1px solid #FF5A1F", color: "#0D0D0D" };
   if (i < 3) return { background: "transparent", border: "1px solid #FF5A1F", color: "#FF5A1F" };
@@ -80,7 +71,7 @@ export default async function Leaderboard() {
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
         .mtc-page { min-height: 100vh; background: #0D0D0D; color: #F5F1EA; font-family: 'Inter', sans-serif; padding-bottom: 60px; }
         .mtc-hero { padding: 40px 24px 34px; text-align: center; border-bottom: 1px solid #201F1C; }
-        .mtc-mark { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 18px; }
+        .mtc-logo { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 1px solid #2A2A2A; margin-bottom: 16px; }
         .mtc-back { display: block; color: #8A8A85; font-size: 13px; text-decoration: none; margin-bottom: 22px; }
         .mtc-back:hover { color: #F5F1EA; }
         .mtc-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #FF5A1F; margin: 0 0 8px; }
@@ -96,6 +87,7 @@ export default async function Leaderboard() {
         .mtc-stats { flex-shrink: 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8A8A85; line-height: 1.5; }
         .mtc-stats .primary { font-size: 16px; font-weight: 600; color: #FF5A1F; }
         .mtc-empty { max-width: 440px; margin: 36px auto 0; padding: 48px 24px; background: #141311; border: 1px solid #201F1C; border-radius: 10px; text-align: center; }
+        .mtc-empty img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid #2A2A2A; }
         .mtc-empty p.title { color: #F5F1EA; font-weight: 600; margin: 16px 0 6px; }
         .mtc-empty p.sub { color: #8A8A85; margin: 0; font-size: 14px; }
         .mtc-footer { max-width: 620px; margin: 26px auto 0; padding: 0 20px; text-align: center; }
@@ -112,16 +104,14 @@ export default async function Leaderboard() {
       <div className="mtc-page">
         <div className="mtc-hero">
           <a href="/profile" className="mtc-back">&larr; Back to my profile</a>
-          <div className="mtc-mark">
-            <MountainMark />
-          </div>
+          <img src="/Meowtain-logo.jpeg" alt="Meowtain Trail Club" className="mtc-logo" />
           <p className="mtc-eyebrow">Meowtain Trail Club</p>
           <h1 className="mtc-title">Leaderboard</h1>
         </div>
 
         {rows.length === 0 ? (
           <div className="mtc-empty">
-            <MountainMark size={28} />
+            <img src="/Meowtain-logo.jpeg" alt="Meowtain Trail Club" />
             <p className="title">No one's logged a run yet.</p>
             <p className="sub">Be the first name on the board.</p>
           </div>
