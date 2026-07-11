@@ -15,17 +15,31 @@ export async function GET(request) {
   const { athlete, access_token, refresh_token, expires_at } = tokenData;
 
   const supabase = supabaseAdmin();
-  await supabase.from("runners").upsert(
-    {
-      strava_athlete_id: athlete.id,
-      name: `${athlete.firstname ?? ""} ${athlete.lastname ?? ""}`.trim(),
-      avatar_url: athlete.profile,
-      access_token,
-      refresh_token,
-      token_expires_at: expires_at,
-    },
-    { onConflict: "strava_athlete_id" }
-  );
+  const { data: runner, error: upsertError } = await supabase
+    .from("runners")
+    .upsert(
+      {
+        strava_athlete_id: athlete.id,
+        name: `${athlete.firstname ?? ""} ${athlete.lastname ?? ""}`.trim(),
+        avatar_url: athlete.profile,
+        access_token,
+        refresh_token,
+        token_expires_at: expires_at,
+      },
+      { onConflict: "strava_athlete_id" }
+    )
+    .select()
+    .single();
 
-  return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/leaderboard?connected=1`);
+  if (upsertError) throw upsertError;
+
+  const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/profile`);
+  response.cookies.set("gotribe_runner_id", runner.id, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 90,
+  });
+  return response;
 }
