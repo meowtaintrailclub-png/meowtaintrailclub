@@ -39,8 +39,20 @@ async function getClubStats() {
   return { totalRunners: totalRunners || 0, ...totals };
 }
 
+async function getSponsors() {
+  const supabase = supabaseAdmin();
+  const { data, error } = await supabase
+    .from("sponsors")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) return [];
+  return data || [];
+}
+
 export default async function Home() {
   const stats = await getClubStats();
+  const sponsors = await getSponsors();
   const hasActivity = stats.elevation > 0;
 
   return (
@@ -73,6 +85,11 @@ export default async function Home() {
         .mtc-step-icon { width: 44px; height: 44px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; border: 1px solid #2A2A2A; border-radius: 50%; }
         .mtc-step-title { font-weight: 600; font-size: 15px; margin: 0 0 6px; }
         .mtc-step-desc { color: #8A8A85; font-size: 13px; line-height: 1.5; margin: 0; }
+        .mtc-sponsors { max-width: 800px; margin: 0 auto; padding: 0 24px 56px; text-align: center; }
+        .mtc-sponsors-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #5A5854; margin: 0 0 20px; }
+        .mtc-sponsors-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .mtc-sponsor-chip { display: inline-flex; align-items: center; justify-content: center; background: #F5F1EA; border-radius: 10px; padding: 12px 20px; }
+        .mtc-sponsor-chip img { height: 32px; max-width: 140px; object-fit: contain; display: block; }
         .mtc-footer { text-align: center; padding: 30px 24px 50px; color: #5A5854; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
         @media (max-width: 700px) and (min-width: 521px) {
           .mtc-steps { grid-template-columns: repeat(2, 1fr); row-gap: 32px; }
@@ -176,6 +193,25 @@ export default async function Home() {
             </div>
           </div>
         </div>
+
+        {sponsors.length > 0 && (
+          <div className="mtc-sponsors">
+            <p className="mtc-sponsors-label">Our Sponsors</p>
+            <div className="mtc-sponsors-row">
+              {sponsors.map((s) =>
+                s.website_url ? (
+                  <a key={s.id} href={s.website_url} target="_blank" rel="noopener noreferrer" className="mtc-sponsor-chip">
+                    <img src={`/${s.logo_path}`} alt={s.name} />
+                  </a>
+                ) : (
+                  <div key={s.id} className="mtc-sponsor-chip">
+                    <img src={`/${s.logo_path}`} alt={s.name} />
+                  </div>
+                )
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="mtc-footer">MEOWTAIN TRAIL CLUB</div>
       </main>
