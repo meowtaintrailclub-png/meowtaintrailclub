@@ -20,7 +20,7 @@ export default async function Profile({ searchParams }) {
 
   const { data: runner, error: runnerError } = await supabase
     .from("runners")
-    .select("id, name, avatar_url, whatsapp, address, date_of_birth")
+    .select("id, name, avatar_url, whatsapp, address, email, date_of_birth")
     .eq("id", runnerId)
     .single();
   if (runnerError || !runner) {
@@ -113,6 +113,8 @@ export default async function Profile({ searchParams }) {
               <p className="mtc-details-title">My Details</p>
               <label className="mtc-field-label">WhatsApp</label>
               <input type="text" name="whatsapp" defaultValue={runner.whatsapp || ""} placeholder="e.g. 0123456789" className="mtc-field-input" />
+              <label className="mtc-field-label">Email</label>
+              <input type="email" name="email" defaultValue={runner.email || ""} placeholder="e.g. you@example.com" className="mtc-field-input" />
               <label className="mtc-field-label">Address</label>
               <input type="text" name="address" defaultValue={runner.address || ""} placeholder="e.g. your delivery address" className="mtc-field-input" />
               <label className="mtc-field-label">Date of Birth</label>
@@ -126,6 +128,10 @@ export default async function Profile({ searchParams }) {
               <div className="mtc-detail-row">
                 <span className="mtc-detail-label">WhatsApp</span>
                 <span className={`mtc-detail-value ${!runner.whatsapp ? "empty" : ""}`}>{runner.whatsapp || "Not set"}</span>
+              </div>
+              <div className="mtc-detail-row">
+                <span className="mtc-detail-label">Email</span>
+                <span className={`mtc-detail-value ${!runner.email ? "empty" : ""}`}>{runner.email || "Not set"}</span>
               </div>
               <div className="mtc-detail-row">
                 <span className="mtc-detail-label">Address</span>
