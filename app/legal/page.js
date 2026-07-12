@@ -13,7 +13,8 @@ export default function Legal() {
         .mtc-legal-updated { color: #5A5854; font-size: 13px; margin: 0 0 36px; }
         .mtc-legal h2 { font-size: 17px; margin: 32px 0 10px; }
         .mtc-legal p { color: #B8B4AC; font-size: 14px; line-height: 1.7; margin: 0 0 12px; }
-        .mtc-legal a.inline { color: #FF5A1F; text-decoration: underline; }
+        .mtc-legal a.inline { color: #FF5A1F; text-decoration: none; }
+        .mtc-legal a.inline:hover { text-decoration: underline; }
       `}</style>
 
       <main className="mtc-legal">
