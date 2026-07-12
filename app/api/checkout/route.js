@@ -6,12 +6,12 @@ import { getCart, CART_COOKIE_NAME } from "../../../lib/cart";
 export async function POST(request) {
   const runnerId = getLoggedInRunnerId();
   if (!runnerId) {
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/`);
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/`, 303);
   }
 
   const cart = getCart();
   if (!cart.length) {
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/shop`);
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/shop`, 303);
   }
 
   const formData = await request.formData();
@@ -54,7 +54,7 @@ export async function POST(request) {
   }
 
   if (orderItemsToInsert.length === 0) {
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/shop`);
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/shop`, 303);
   }
 
   const { data: order, error: orderError } = await supabase
@@ -99,7 +99,7 @@ export async function POST(request) {
     const errText = await hitpayResponse.text();
     console.error("HitPay error", errText);
     await supabase.from("orders").update({ status: "failed" }).eq("id", order.id);
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/shop?error=payment`);
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/shop?error=payment`, 303);
   }
 
   const hitpayData = await hitpayResponse.json();
@@ -109,7 +109,7 @@ export async function POST(request) {
     .update({ hitpay_payment_request_id: hitpayData.id })
     .eq("id", order.id);
 
-  const response = NextResponse.redirect(hitpayData.url);
+  const response = NextResponse.redirect(hitpayData.url, 303);
   response.cookies.set(CART_COOKIE_NAME, "", {
     httpOnly: true,
     secure: true,
