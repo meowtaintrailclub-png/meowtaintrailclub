@@ -85,6 +85,8 @@ export default async function Profile({ searchParams }) {
         .mtc-links a { display: block; color: #8A8A85; text-decoration: none; font-size: 14px; margin-bottom: 12px; }
         .mtc-links a:hover { color: #F5F1EA; }
         .mtc-links a.primary { color: #FF5A1F; font-weight: 600; }
+        .mtc-links a.danger { color: #7A5A50; font-size: 13px; }
+        .mtc-links a.danger:hover { color: #E07050; }
       `}</style>
 
       <div className="mtc-page">
@@ -166,6 +168,7 @@ export default async function Profile({ searchParams }) {
           <div className="mtc-links">
             <a href="/leaderboard" className="primary">View this month's leaderboard &rarr;</a>
             <a href="/api/auth/logout">Log out</a>
+            <a href="/profile/leave" className="danger">Leave the club</a>
           </div>
         </div>
       </div>
