@@ -88,7 +88,7 @@ export default async function Home() {
         .mtc-sponsors { max-width: 800px; margin: 0 auto; padding: 0 24px 56px; text-align: center; }
         .mtc-sponsors-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #5A5854; margin: 0 0 20px; }
         .mtc-sponsors-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-        .mtc-sponsor-chip { width: 150px; height: 76px; display: flex; align-items: center; justify-content: center; background: #F5F1EA; border-radius: 10px; padding: 10px; box-sizing: border-box; }
+        .mtc-sponsor-chip { width: 150px; height: 76px; display: flex; align-items: center; justify-content: center; background: #141311; border: 1px solid #201F1C; border-radius: 10px; padding: 10px; box-sizing: border-box; }
         .mtc-sponsor-chip img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
         .mtc-footer { text-align: center; padding: 30px 24px 50px; color: #5A5854; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
         @media (max-width: 700px) and (min-width: 521px) {
