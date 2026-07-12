@@ -93,9 +93,7 @@ async function getLeaderboard(monthStr, gender) {
     t.activity_count += 1;
   }
 
-  return Object.values(totals)
-    .filter((r) => r.activity_count > 0)
-    .sort((a, b) => b.total_elevation_m - a.total_elevation_m);
+  return Object.values(totals).sort((a, b) => b.total_elevation_m - a.total_elevation_m);
 }
 
 function formatTime(totalSeconds) {
@@ -179,7 +177,7 @@ export default async function Leaderboard({ searchParams }) {
         .mtc-search-input:focus { outline: none; border-color: #FF5A1F; }
         .mtc-search-input::placeholder { color: #5A5854; }
         .mtc-list { max-width: 620px; margin: 20px auto 0; padding: 0 20px; }
-        .mtc-card { background: #141311; border: 1px solid #201F1C; border-radius: 10px; padding: 16px 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; transition: border-color 0.15s ease; }
+        .mtc-card { background: #141311; border: 1px solid #201F1C; border-radius: 10px; padding: 16px 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; transition: border-color 0.15s ease; text-decoration: none; color: inherit; }
         .mtc-card:hover { border-color: #3A3733; }
         .mtc-rank { flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 14px; }
         .mtc-avatar { flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1px solid #2A2A2A; }
@@ -260,8 +258,8 @@ export default async function Leaderboard({ searchParams }) {
         {rows.length === 0 ? (
           <div className="mtc-empty">
             <img src="/Meowtain-logo.jpeg" alt="Meowtain Trail Club" />
-            <p className="title">No one logged a run in {monthLabel(selectedMonth)}.</p>
-            <p className="sub">Be the first name on this month's board.</p>
+            <p className="title">No runners found.</p>
+            <p className="sub">No one matches this filter yet.</p>
           </div>
         ) : (
           <>
@@ -269,7 +267,7 @@ export default async function Leaderboard({ searchParams }) {
               {rows.map((r, i) => {
                 const barWidth = maxDistance ? Math.max(4, (r.total_distance_m / maxDistance) * 100) : 0;
                 return (
-                  <div className="mtc-card" data-name={r.name.toLowerCase()} key={r.runner_id}>
+                  <a href={`/runner/${r.runner_id}`} className="mtc-card" data-name={r.name.toLowerCase()} key={r.runner_id}>
                     <div className="mtc-rank" style={rankBadgeStyle(i)}>{i + 1}</div>
 
                     {r.avatar_url && <img className="mtc-avatar" src={r.avatar_url} alt={r.name} />}
@@ -285,7 +283,7 @@ export default async function Leaderboard({ searchParams }) {
                       <div className="primary">{Math.round(r.total_elevation_m)} m</div>
                       <div>{(r.total_distance_m / 1000).toFixed(1)} km &middot; {formatTime(r.total_moving_time_s)}</div>
                     </div>
-                  </div>
+                  </a>
                 );
               })}
             </div>
