@@ -36,17 +36,17 @@ export default async function SponsorsAdmin() {
         .mtc-details-card { background: #141311; border: 1px solid #201F1C; border-radius: 10px; padding: 20px; text-align: left; }
         .mtc-details-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; margin: 0 0 14px; }
         .mtc-field-label { display: block; margin-bottom: 6px; font-size: 13px; color: #8A8A85; }
-        .mtc-field-input { width: 100%; padding: 10px 12px; margin-bottom: 8px; box-sizing: border-box; background: #0D0D0D; border: 1px solid #2A2A2A; border-radius: 6px; color: #F5F1EA; font-family: 'Inter', sans-serif; font-size: 14px; }
+        .mtc-field-input { width: 100%; padding: 10px 12px; margin-bottom: 16px; box-sizing: border-box; background: #0D0D0D; border: 1px solid #2A2A2A; border-radius: 6px; color: #F5F1EA; font-family: 'Inter', sans-serif; font-size: 14px; }
         .mtc-field-input:focus { outline: none; border-color: #FF5A1F; }
-        .mtc-hint { color: #5A5854; font-size: 12px; margin: 0 0 16px; line-height: 1.5; }
-        .mtc-hint code { background: #0D0D0D; padding: 1px 5px; border-radius: 3px; }
+        .mtc-field-file { width: 100%; padding: 10px 0; margin-bottom: 16px; color: #8A8A85; font-size: 13px; }
         .mtc-btn-primary { display: inline-block; padding: 10px 22px; background: #FF5A1F; color: #0D0D0D; border: none; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; }
         .mtc-btn-danger { padding: 7px 14px; background: transparent; border: 1px solid #B23B22; color: #E07050; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
         .mtc-list-card { background: #141311; border: 1px solid #201F1C; border-radius: 10px; padding: 20px; margin-top: 16px; text-align: left; }
         .mtc-empty-text { color: #5A5854; font-size: 14px; font-style: italic; }
         .mtc-sponsor-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid #201F1C; }
         .mtc-sponsor-row:last-child { border-bottom: none; }
-        .mtc-sponsor-thumb { width: 48px; height: 48px; object-fit: contain; background: #F5F1EA; border-radius: 6px; padding: 6px; }
+        .mtc-sponsor-thumb-box { flex-shrink: 0; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; background: #F5F1EA; border-radius: 6px; padding: 6px; box-sizing: border-box; }
+        .mtc-sponsor-thumb-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
         .mtc-sponsor-name { font-weight: 600; font-size: 14px; margin: 0; }
         .mtc-sponsor-url { color: #8A8A85; font-size: 12px; margin: 2px 0 0; word-break: break-all; }
       `}</style>
@@ -59,24 +59,20 @@ export default async function SponsorsAdmin() {
         </div>
 
         <div className="mtc-body">
-          <form action="/api/admin/sponsors/create" method="POST" className="mtc-details-card">
+          <form action="/api/admin/sponsors/upload" method="POST" encType="multipart/form-data" className="mtc-details-card">
             <p className="mtc-details-title">Add a sponsor</p>
 
             <label className="mtc-field-label">Sponsor Name</label>
             <input type="text" name="name" required className="mtc-field-input" placeholder="e.g. Trail Gear Co." />
 
-            <label className="mtc-field-label">Logo filename</label>
-            <input type="text" name="logo_path" required className="mtc-field-input" placeholder="e.g. sponsor-trailgear.png" />
-            <p className="mtc-hint">
-              Upload the logo image to your GitHub repo's <code>public</code> folder first (same way you added
-              <code> Meowtain-logo.jpeg</code>), then type its exact filename here.
-            </p>
+            <label className="mtc-field-label">Logo</label>
+            <input type="file" name="logo" accept="image/*" required className="mtc-field-file" />
 
             <label className="mtc-field-label">Website (optional)</label>
             <input type="url" name="website_url" className="mtc-field-input" placeholder="https://..." />
 
             <div style={{ marginTop: 8 }}>
-              <button type="submit" className="mtc-btn-primary">Add Sponsor</button>
+              <button type="submit" className="mtc-btn-primary">Upload &amp; Add Sponsor</button>
             </div>
           </form>
 
@@ -85,19 +81,24 @@ export default async function SponsorsAdmin() {
             {sponsors.length === 0 ? (
               <p className="mtc-empty-text">No sponsors added yet.</p>
             ) : (
-              sponsors.map((s) => (
-                <div className="mtc-sponsor-row" key={s.id}>
-                  <img src={`/${s.logo_path}`} alt={s.name} className="mtc-sponsor-thumb" />
-                  <div style={{ flex: 1 }}>
-                    <p className="mtc-sponsor-name">{s.name}</p>
-                    {s.website_url && <p className="mtc-sponsor-url">{s.website_url}</p>}
+              sponsors.map((s) => {
+                const src = s.logo_url || (s.logo_path ? `/${s.logo_path}` : null);
+                return (
+                  <div className="mtc-sponsor-row" key={s.id}>
+                    <div className="mtc-sponsor-thumb-box">
+                      {src && <img src={src} alt={s.name} />}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p className="mtc-sponsor-name">{s.name}</p>
+                      {s.website_url && <p className="mtc-sponsor-url">{s.website_url}</p>}
+                    </div>
+                    <form action="/api/admin/sponsors/delete" method="POST">
+                      <input type="hidden" name="id" value={s.id} />
+                      <button type="submit" className="mtc-btn-danger">Remove</button>
+                    </form>
                   </div>
-                  <form action="/api/admin/sponsors/delete" method="POST">
-                    <input type="hidden" name="id" value={s.id} />
-                    <button type="submit" className="mtc-btn-danger">Remove</button>
-                  </form>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
