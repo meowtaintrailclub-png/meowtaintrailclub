@@ -88,8 +88,8 @@ export default async function Home() {
         .mtc-sponsors { max-width: 800px; margin: 0 auto; padding: 0 24px 56px; text-align: center; }
         .mtc-sponsors-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #5A5854; margin: 0 0 20px; }
         .mtc-sponsors-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-        .mtc-sponsor-chip { display: inline-flex; align-items: center; justify-content: center; background: #F5F1EA; border-radius: 10px; padding: 12px 20px; }
-        .mtc-sponsor-chip img { height: 32px; max-width: 140px; object-fit: contain; display: block; }
+        .mtc-sponsor-chip { width: 150px; height: 76px; display: flex; align-items: center; justify-content: center; background: #F5F1EA; border-radius: 10px; padding: 10px; box-sizing: border-box; }
+        .mtc-sponsor-chip img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
         .mtc-footer { text-align: center; padding: 30px 24px 50px; color: #5A5854; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
         @media (max-width: 700px) and (min-width: 521px) {
           .mtc-steps { grid-template-columns: repeat(2, 1fr); row-gap: 32px; }
@@ -98,6 +98,7 @@ export default async function Home() {
           .mtc-headline { font-size: 32px; }
           .mtc-steps { grid-template-columns: 1fr; gap: 32px; }
           .mtc-stats-inner { gap: 24px; }
+          .mtc-sponsor-chip { width: 120px; height: 64px; }
         }
       `}</style>
 
@@ -198,17 +199,19 @@ export default async function Home() {
           <div className="mtc-sponsors">
             <p className="mtc-sponsors-label">Our Sponsors</p>
             <div className="mtc-sponsors-row">
-              {sponsors.map((s) =>
-                s.website_url ? (
+              {sponsors.map((s) => {
+                const src = s.logo_url || (s.logo_path ? `/${s.logo_path}` : null);
+                if (!src) return null;
+                return s.website_url ? (
                   <a key={s.id} href={s.website_url} target="_blank" rel="noopener noreferrer" className="mtc-sponsor-chip">
-                    <img src={`/${s.logo_path}`} alt={s.name} />
+                    <img src={src} alt={s.name} />
                   </a>
                 ) : (
                   <div key={s.id} className="mtc-sponsor-chip">
-                    <img src={`/${s.logo_path}`} alt={s.name} />
+                    <img src={src} alt={s.name} />
                   </div>
-                )
-              )}
+                );
+              })}
             </div>
           </div>
         )}
