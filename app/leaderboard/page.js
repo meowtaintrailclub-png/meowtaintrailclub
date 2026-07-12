@@ -117,6 +117,25 @@ export default async function Leaderboard({ searchParams }) {
     redirect("/");
   }
 
+  const supabaseCheck = supabaseAdmin();
+  const { data: currentRunner } = await supabaseCheck
+    .from("runners")
+    .select("whatsapp, email, address, date_of_birth, gender")
+    .eq("id", runnerId)
+    .single();
+
+  const isProfileComplete = !!(
+    currentRunner?.whatsapp &&
+    currentRunner?.email &&
+    currentRunner?.address &&
+    currentRunner?.date_of_birth &&
+    currentRunner?.gender
+  );
+
+  if (!isProfileComplete) {
+    redirect("/profile?edit=1&required=1");
+  }
+
   const currentMonth = monthKey(new Date());
   const availableMonths = await getAvailableMonths();
   const monthsToShow = Array.from(new Set([currentMonth, ...availableMonths])).sort().reverse();
