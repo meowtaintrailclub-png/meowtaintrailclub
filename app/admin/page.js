@@ -177,6 +177,8 @@ export default async function AdminPage({ searchParams }) {
           <p className="mtc-nav-row">
             <a href="/admin/prizes">Manage Prizes &amp; Lucky Draw &rarr;</a>
             <a href="/admin/sponsors">Manage Sponsors &rarr;</a>
+            <a href="/admin/products">Manage Products &rarr;</a>
+            <a href="/admin/orders">Manage Orders &rarr;</a>
           </p>
         </div>
 
