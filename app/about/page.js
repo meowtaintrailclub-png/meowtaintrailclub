@@ -1,6 +1,4 @@
-No, sorry for the confusion — they're different pages with different content, just the same type of small style fix. Let me give you the full about page code directly instead, so there's no ambiguity:
-Update app/about/page.js
-javascriptexport const metadata = {
+export const metadata = {
   title: "About & Club Rules · Meowtain Trail Club",
   description: "How Meowtain Trail Club's monthly challenge works, and the rules of the road.",
 };
