@@ -59,7 +59,7 @@ export default async function SponsorsAdmin() {
         </div>
 
         <div className="mtc-body">
-          <form action="/api/admin/sponsors/add" method="POST" className="mtc-details-card">
+          <form action="/api/admin/sponsors/create" method="POST" className="mtc-details-card">
             <p className="mtc-details-title">Add a sponsor</p>
 
             <label className="mtc-field-label">Sponsor Name</label>
