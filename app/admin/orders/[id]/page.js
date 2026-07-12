@@ -59,6 +59,10 @@ export default async function EditOrder({ params }) {
         .mtc-checkbox-row input { width: 18px; height: 18px; accent-color: #FF5A1F; }
         .mtc-checkbox-row label { font-size: 14px; color: #F5F1EA; }
         .mtc-btn-primary { display: inline-block; padding: 10px 22px; background: #FF5A1F; color: #0D0D0D; border: none; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; }
+        .mtc-danger-card { margin-top: 16px; background: #1A1210; border: 1px solid #3A2420; border-radius: 10px; padding: 20px; text-align: left; }
+        .mtc-danger-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; margin: 0 0 6px; color: #E88; }
+        .mtc-btn-danger { display: inline-block; padding: 9px 18px; background: transparent; border: 1px solid #B23B22; color: #E07050; border-radius: 6px; font-weight: 600; font-size: 13px; text-decoration: none; }
+        .mtc-btn-danger:hover { background: #2A1512; }
       `}</style>
 
       <div className="mtc-page">
@@ -114,6 +118,14 @@ export default async function EditOrder({ params }) {
 
             <button type="submit" className="mtc-btn-primary">Save Changes</button>
           </form>
+
+          <div className="mtc-danger-card">
+            <p className="mtc-danger-title">Danger zone</p>
+            <p style={{ color: "#8A8A85", fontSize: 13, marginBottom: 14 }}>
+              Deleting an order removes it and its line items permanently. This does not refund the payment on HitPay's side.
+            </p>
+            <a href={`/admin/orders/${order.id}/delete`} className="mtc-btn-danger">Delete this order</a>
+          </div>
         </div>
       </div>
     </>
