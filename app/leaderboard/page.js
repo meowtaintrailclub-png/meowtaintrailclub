@@ -1,4 +1,4 @@
-javascriptimport { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { supabaseAdmin } from "../../lib/supabase";
 import { getLoggedInRunnerId } from "../../lib/session";
 
