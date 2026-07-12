@@ -89,6 +89,10 @@ export default async function Profile({ searchParams }) {
         .mtc-links a.primary { color: #FF5A1F; font-weight: 600; }
         .mtc-links a.danger { color: #7A5A50; font-size: 13px; }
         .mtc-links a.danger:hover { color: #E07050; }
+        .mtc-shop-banner { display: flex; align-items: center; justify-content: space-between; gap: 14px; background: linear-gradient(135deg, #FF5A1F 0%, #E8480F 100%); border-radius: 10px; padding: 18px 20px; margin-top: 16px; text-decoration: none; }
+        .mtc-shop-banner-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; margin: 0 0 2px; color: #0D0D0D; }
+        .mtc-shop-banner-sub { font-size: 13px; margin: 0; color: #2A1206; opacity: 0.85; }
+        .mtc-shop-banner-arrow { font-size: 22px; font-weight: 700; flex-shrink: 0; color: #0D0D0D; }
       `}</style>
 
       <div className="mtc-page">
@@ -117,6 +121,14 @@ export default async function Profile({ searchParams }) {
               <div className="mtc-stat-label">Activities</div>
             </div>
           </div>
+
+          <a href="/shop" className="mtc-shop-banner">
+            <div>
+              <p className="mtc-shop-banner-title">Support the movement</p>
+              <p className="mtc-shop-banner-sub">Shop official Meowtain Trail Club merchandise</p>
+            </div>
+            <span className="mtc-shop-banner-arrow">&rarr;</span>
+          </a>
 
           {isEditing ? (
             <form action="/api/profile/update" method="POST" className="mtc-details-card">
