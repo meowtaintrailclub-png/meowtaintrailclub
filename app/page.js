@@ -16,9 +16,11 @@ function formatNumber(n) {
 async function getClubStats() {
   const supabase = supabaseAdmin();
 
-  const { count: totalRunners } = await supabase
+  const { data: allRunners, error: runnersError } = await supabase
     .from("runners")
-    .select("*", { count: "exact", head: true });
+    .select("id");
+  if (runnersError) throw runnersError;
+  const totalRunners = allRunners.length;
 
   const { start, end } = monthBounds();
   const { data: activities } = await supabase
@@ -36,7 +38,7 @@ async function getClubStats() {
     { distance: 0, elevation: 0 }
   );
 
-  return { totalRunners: totalRunners || 0, ...totals };
+  return { totalRunners, ...totals };
 }
 
 async function getSponsors() {
