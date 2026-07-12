@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+javascriptimport { redirect } from "next/navigation";
 import { supabaseAdmin } from "../../lib/supabase";
 import { isAdminLoggedIn } from "../../lib/adminSession";
 
@@ -179,6 +179,7 @@ export default async function AdminPage({ searchParams }) {
             <a href="/admin/sponsors">Manage Sponsors &rarr;</a>
             <a href="/admin/products">Manage Products &rarr;</a>
             <a href="/admin/orders">Manage Orders &rarr;</a>
+            <a href="/admin/reports">View Reports &rarr;</a>
           </p>
         </div>
 
