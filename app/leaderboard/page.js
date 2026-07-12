@@ -155,7 +155,11 @@ export default async function Leaderboard({ searchParams }) {
         .mtc-rewards-section + .mtc-rewards-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid #201F1C; }
         .mtc-rewards-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #FF5A1F; margin: 0 0 6px; }
         .mtc-rewards-text { color: #E8E4DC; font-size: 14px; line-height: 1.6; margin: 0; white-space: pre-line; text-align: left; }
-        .mtc-list { max-width: 620px; margin: 28px auto 0; padding: 0 20px; }
+        .mtc-search-wrap { max-width: 620px; margin: 24px auto 0; padding: 0 20px; }
+        .mtc-search-input { width: 100%; padding: 11px 14px; box-sizing: border-box; background: #141311; border: 1px solid #2A2A2A; border-radius: 8px; color: #F5F1EA; font-family: 'Inter', sans-serif; font-size: 14px; }
+        .mtc-search-input:focus { outline: none; border-color: #FF5A1F; }
+        .mtc-search-input::placeholder { color: #5A5854; }
+        .mtc-list { max-width: 620px; margin: 20px auto 0; padding: 0 20px; }
         .mtc-card { background: #141311; border: 1px solid #201F1C; border-radius: 10px; padding: 16px 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; transition: border-color 0.15s ease; }
         .mtc-card:hover { border-color: #3A3733; }
         .mtc-rank { flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 14px; }
@@ -169,6 +173,7 @@ export default async function Leaderboard({ searchParams }) {
         .mtc-empty img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid #2A2A2A; }
         .mtc-empty p.title { color: #F5F1EA; font-weight: 600; margin: 16px 0 6px; }
         .mtc-empty p.sub { color: #8A8A85; margin: 0; font-size: 14px; }
+        .mtc-no-results { display: none; max-width: 620px; margin: 20px auto 0; padding: 30px 20px; text-align: center; color: #8A8A85; font-size: 14px; }
         .mtc-sponsors { max-width: 620px; margin: 34px auto 0; padding: 0 20px; text-align: center; }
         .mtc-sponsors-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #5A5854; margin: 0 0 16px; }
         .mtc-sponsors-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
@@ -227,6 +232,12 @@ export default async function Leaderboard({ searchParams }) {
           </div>
         )}
 
+        {rows.length > 0 && (
+          <div className="mtc-search-wrap">
+            <input type="text" id="mtc-search" placeholder="Search runners..." className="mtc-search-input" />
+          </div>
+        )}
+
         {rows.length === 0 ? (
           <div className="mtc-empty">
             <img src="/Meowtain-logo.jpeg" alt="Meowtain Trail Club" />
@@ -234,30 +245,33 @@ export default async function Leaderboard({ searchParams }) {
             <p className="sub">Be the first name on this month's board.</p>
           </div>
         ) : (
-          <div className="mtc-list">
-            {rows.map((r, i) => {
-              const barWidth = maxDistance ? Math.max(4, (r.total_distance_m / maxDistance) * 100) : 0;
-              return (
-                <div className="mtc-card" key={r.runner_id}>
-                  <div className="mtc-rank" style={rankBadgeStyle(i)}>{i + 1}</div>
+          <>
+            <div className="mtc-list">
+              {rows.map((r, i) => {
+                const barWidth = maxDistance ? Math.max(4, (r.total_distance_m / maxDistance) * 100) : 0;
+                return (
+                  <div className="mtc-card" data-name={r.name.toLowerCase()} key={r.runner_id}>
+                    <div className="mtc-rank" style={rankBadgeStyle(i)}>{i + 1}</div>
 
-                  {r.avatar_url && <img className="mtc-avatar" src={r.avatar_url} alt={r.name} />}
+                    {r.avatar_url && <img className="mtc-avatar" src={r.avatar_url} alt={r.name} />}
 
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p className="mtc-name">{r.name}</p>
-                    <div className="mtc-bar-track">
-                      <div className="mtc-bar-fill" style={{ width: `${barWidth}%` }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p className="mtc-name">{r.name}</p>
+                      <div className="mtc-bar-track">
+                        <div className="mtc-bar-fill" style={{ width: `${barWidth}%` }} />
+                      </div>
+                    </div>
+
+                    <div className="mtc-stats">
+                      <div className="primary">{Math.round(r.total_elevation_m)} m</div>
+                      <div>{(r.total_distance_m / 1000).toFixed(1)} km &middot; {formatTime(r.total_moving_time_s)}</div>
                     </div>
                   </div>
-
-                  <div className="mtc-stats">
-                    <div className="primary">{Math.round(r.total_elevation_m)} m</div>
-                    <div>{(r.total_distance_m / 1000).toFixed(1)} km &middot; {formatTime(r.total_moving_time_s)}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+            <p className="mtc-no-results" id="mtc-no-results">No runners match your search.</p>
+          </>
         )}
 
         {sponsors.length > 0 && (
@@ -286,6 +300,31 @@ export default async function Leaderboard({ searchParams }) {
           <a href="/profile">&larr; Back to my profile</a>
         </div>
       </div>
+
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            var searchInput = document.getElementById('mtc-search');
+            if (searchInput) {
+              searchInput.addEventListener('input', function () {
+                var query = this.value.toLowerCase();
+                var cards = document.querySelectorAll('.mtc-card');
+                var visibleCount = 0;
+                cards.forEach(function (card) {
+                  var name = card.getAttribute('data-name') || '';
+                  var match = name.indexOf(query) !== -1;
+                  card.style.display = match ? '' : 'none';
+                  if (match) visibleCount++;
+                });
+                var noResults = document.getElementById('mtc-no-results');
+                if (noResults) {
+                  noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+                }
+              });
+            }
+          `,
+        }}
+      />
     </>
   );
 }
