@@ -1,4 +1,6 @@
-export const metadata = {
+No, sorry for the confusion — they're different pages with different content, just the same type of small style fix. Let me give you the full about page code directly instead, so there's no ambiguity:
+Update app/about/page.js
+javascriptexport const metadata = {
   title: "About & Club Rules · Meowtain Trail Club",
   description: "How Meowtain Trail Club's monthly challenge works, and the rules of the road.",
 };
@@ -24,7 +26,8 @@ export default function About() {
         .mtc-card-title { font-weight: 600; font-size: 14px; color: #FF5A1F; margin: 0 0 4px; }
         .mtc-card p { margin: 0; }
         .mtc-todo { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #0D0D0D; background: #FF5A1F; border-radius: 4px; padding: 2px 8px; margin-left: 8px; vertical-align: middle; }
-        .mtc-about a.inline { color: #FF5A1F; text-decoration: underline; }
+        .mtc-about a.inline { color: #FF5A1F; text-decoration: none; }
+        .mtc-about a.inline:hover { text-decoration: underline; }
       `}</style>
 
       <main className="mtc-about">
