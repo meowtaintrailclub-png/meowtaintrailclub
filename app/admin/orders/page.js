@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 function statusBadge(status) {
   if (status === "paid") return { label: "Paid", color: "#5CA36E" };
   if (status === "failed") return { label: "Failed", color: "#E07050" };
+  if (status === "cancelled") return { label: "Cancelled", color: "#7A5A50" };
   return { label: "Pending", color: "#8A8A85" };
 }
 
@@ -17,6 +18,7 @@ function formatDate(d) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Kuala_Lumpur",
   });
 }
 
@@ -56,13 +58,14 @@ export default async function OrdersAdmin() {
         .mtc-order-date { color: #5A5854; font-size: 12px; margin: 0; }
         .mtc-order-total { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 16px; color: #F5F1EA; }
         .mtc-status-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-top: 6px; }
-        .mtc-items-list { border-top: 1px solid #201F1C; border-bottom: 1px solid #201F1C; padding: 12px 0; margin-bottom: 12px; }
+        .mtc-items-list { border-top: 1px solid #201F1C; border-bottom: 1px solid #201F1C; padding: 12px 0; margin-bottom: 14px; }
         .mtc-item-line { display: flex; justify-content: space-between; font-size: 13px; color: #B8B4AC; margin-bottom: 6px; }
         .mtc-item-line:last-child { margin-bottom: 0; }
-        .mtc-ship-info { font-size: 13px; color: #B8B4AC; line-height: 1.6; margin-bottom: 14px; }
-        .mtc-ship-info strong { color: #F5F1EA; }
-        .mtc-btn-fulfill { padding: 8px 16px; background: #FF5A1F; color: #0D0D0D; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; }
-        .mtc-fulfilled-badge { display: inline-block; font-size: 12px; font-weight: 600; color: #5CA36E; }
+        .mtc-order-bottom { display: flex; justify-content: space-between; align-items: center; }
+        .mtc-fulfilled-badge { font-size: 12px; font-weight: 600; color: #5CA36E; }
+        .mtc-not-fulfilled { font-size: 12px; color: #5A5854; }
+        .mtc-edit-link { color: #FF5A1F; text-decoration: none; font-weight: 600; font-size: 13px; }
+        .mtc-edit-link:hover { text-decoration: underline; }
       `}</style>
 
       <div className="mtc-page">
@@ -101,22 +104,14 @@ export default async function OrdersAdmin() {
                     ))}
                   </div>
 
-                  <div className="mtc-ship-info">
-                    <div><strong>Ship to:</strong> {order.shipping_name}</div>
-                    <div><strong>Phone:</strong> {order.shipping_phone}</div>
-                    <div><strong>Address:</strong> {order.shipping_address}</div>
-                  </div>
-
-                  {order.status === "paid" && (
-                    order.fulfilled ? (
+                  <div className="mtc-order-bottom">
+                    {order.fulfilled ? (
                       <span className="mtc-fulfilled-badge">&#10003; Shipped</span>
                     ) : (
-                      <form action="/api/admin/orders/fulfill" method="POST">
-                        <input type="hidden" name="id" value={order.id} />
-                        <button type="submit" className="mtc-btn-fulfill">Mark as Shipped</button>
-                      </form>
-                    )
-                  )}
+                      <span className="mtc-not-fulfilled">Not shipped</span>
+                    )}
+                    <a href={`/admin/orders/${order.id}`} className="mtc-edit-link">Edit &rarr;</a>
+                  </div>
                 </div>
               );
             })
