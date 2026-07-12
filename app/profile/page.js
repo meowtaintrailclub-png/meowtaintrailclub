@@ -52,7 +52,8 @@ export default async function Profile({ searchParams }) {
 
   const hours = Math.floor(totals.time / 3600);
   const minutes = Math.round((totals.time % 3600) / 60);
-  const isEditing = searchParams?.edit === "1";
+  const isRequired = searchParams?.required === "1";
+  const isEditing = isRequired || searchParams?.edit === "1";
 
   return (
     <>
@@ -70,6 +71,7 @@ export default async function Profile({ searchParams }) {
         .mtc-stat-label { font-size: 12px; color: #8A8A85; margin-top: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
         .mtc-details-card { background: #141311; border: 1px solid #201F1C; border-radius: 10px; padding: 20px; margin-top: 16px; text-align: left; }
         .mtc-details-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; margin: 0 0 14px; }
+        .mtc-required-banner { background: #1A1210; border: 1px solid #3A2420; color: #E07050; font-size: 13px; padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; line-height: 1.5; }
         .mtc-detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #201F1C; font-size: 14px; }
         .mtc-detail-row:last-of-type { border-bottom: none; }
         .mtc-detail-label { color: #8A8A85; }
@@ -119,22 +121,34 @@ export default async function Profile({ searchParams }) {
           {isEditing ? (
             <form action="/api/profile/update" method="POST" className="mtc-details-card">
               <p className="mtc-details-title">My Details</p>
+
+              {isRequired && (
+                <p className="mtc-required-banner">
+                  Please complete your details below to continue using the club.
+                </p>
+              )}
+
               <label className="mtc-field-label">WhatsApp</label>
-              <input type="text" name="whatsapp" defaultValue={runner.whatsapp || ""} placeholder="e.g. 0123456789" className="mtc-field-input" />
+              <input type="text" name="whatsapp" defaultValue={runner.whatsapp || ""} placeholder="e.g. 0123456789" required className="mtc-field-input" />
+
               <label className="mtc-field-label">Email</label>
-              <input type="email" name="email" defaultValue={runner.email || ""} placeholder="e.g. you@example.com" className="mtc-field-input" />
+              <input type="email" name="email" defaultValue={runner.email || ""} placeholder="e.g. you@example.com" required className="mtc-field-input" />
+
               <label className="mtc-field-label">Address</label>
-              <input type="text" name="address" defaultValue={runner.address || ""} placeholder="e.g. your delivery address" className="mtc-field-input" />
+              <input type="text" name="address" defaultValue={runner.address || ""} placeholder="e.g. your delivery address" required className="mtc-field-input" />
+
               <label className="mtc-field-label">Date of Birth</label>
-              <input type="date" name="date_of_birth" defaultValue={runner.date_of_birth || ""} className="mtc-field-input" />
+              <input type="date" name="date_of_birth" defaultValue={runner.date_of_birth || ""} required className="mtc-field-input" />
+
               <label className="mtc-field-label">Gender</label>
-              <select name="gender" defaultValue={runner.gender || ""} className="mtc-field-input">
-                <option value="">Not set</option>
+              <select name="gender" defaultValue={runner.gender || ""} required className="mtc-field-input">
+                <option value="" disabled>Select gender</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
               </select>
+
               <button type="submit" className="mtc-btn-primary">Save</button>
-              <a href="/profile" className="mtc-btn-ghost">Cancel</a>
+              {!isRequired && <a href="/profile" className="mtc-btn-ghost">Cancel</a>}
             </form>
           ) : (
             <div className="mtc-details-card">
