@@ -172,7 +172,7 @@ export default async function Leaderboard({ searchParams }) {
         .mtc-sponsors { max-width: 620px; margin: 34px auto 0; padding: 0 20px; text-align: center; }
         .mtc-sponsors-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #5A5854; margin: 0 0 16px; }
         .mtc-sponsors-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-        .mtc-sponsor-chip { width: 120px; height: 60px; display: flex; align-items: center; justify-content: center; background: #141311; border: 1px solid #201F1C; border-radius: 8px; padding: 8px; box-sizing: border-box; }
+        .mtc-sponsor-chip { width: 120px; height: 60px; display: flex; align-items: center; justify-content: center; }
         .mtc-sponsor-chip img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
         .mtc-footer { max-width: 620px; margin: 26px auto 0; padding: 0 20px; text-align: center; }
         .mtc-footer a { color: #8A8A85; text-decoration: none; font-size: 13px; display: block; margin-bottom: 10px; }
