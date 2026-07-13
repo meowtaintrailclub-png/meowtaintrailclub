@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "../lib/supabase";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function monthBounds() {
   const now = new Date();
