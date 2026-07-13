@@ -52,6 +52,17 @@ async function getRewards(monthStr) {
   return data;
 }
 
+async function getSponsors() {
+  const supabase = supabaseAdmin();
+  const { data, error } = await supabase
+    .from("sponsors")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) return [];
+  return data || [];
+}
+
 async function getLeaderboard(monthStr, gender) {
   const supabase = supabaseAdmin();
   const { start, end } = monthBounds(monthStr);
@@ -141,6 +152,7 @@ export default async function PublicLeaderboard({ searchParams }) {
 
   const rows = await getLeaderboard(selectedMonth, selectedGender);
   const rewards = await getRewards(selectedMonth);
+  const sponsors = await getSponsors();
   const maxDistance = rows.length ? Math.max(...rows.map((r) => r.total_distance_m)) : 0;
   const totalElevation = rows.reduce((sum, r) => sum + r.total_elevation_m, 0);
 
@@ -187,6 +199,11 @@ export default async function PublicLeaderboard({ searchParams }) {
         .mtc-empty img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid #2A2A2A; }
         .mtc-empty p.title { color: #F5F1EA; font-weight: 600; margin: 16px 0 6px; }
         .mtc-empty p.sub { color: #8A8A85; margin: 0; font-size: 14px; }
+        .mtc-sponsors { max-width: 620px; margin: 34px auto 0; padding: 0 20px; text-align: center; }
+        .mtc-sponsors-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #5A5854; margin: 0 0 16px; }
+        .mtc-sponsors-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .mtc-sponsor-chip { width: 120px; height: 60px; display: flex; align-items: center; justify-content: center; }
+        .mtc-sponsor-chip img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
         .mtc-share-wrap { max-width: 620px; margin: 34px auto 0; padding: 0 20px; text-align: center; }
         .mtc-share-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #5A5854; margin: 0 0 12px; }
         .mtc-share-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
@@ -271,6 +288,27 @@ export default async function PublicLeaderboard({ searchParams }) {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {sponsors.length > 0 && (
+          <div className="mtc-sponsors">
+            <p className="mtc-sponsors-label">Our Sponsors</p>
+            <div className="mtc-sponsors-row">
+              {sponsors.map((s) => {
+                const src = s.logo_url || (s.logo_path ? `/${s.logo_path}` : null);
+                if (!src) return null;
+                return s.website_url ? (
+                  <a key={s.id} href={s.website_url} target="_blank" rel="noopener noreferrer" className="mtc-sponsor-chip">
+                    <img src={src} alt={s.name} />
+                  </a>
+                ) : (
+                  <div key={s.id} className="mtc-sponsor-chip">
+                    <img src={src} alt={s.name} />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
