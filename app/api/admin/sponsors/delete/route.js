@@ -8,10 +8,14 @@ export async function POST(request) {
   }
 
   const formData = await request.formData();
-  const sponsorId = formData.get("sponsor_id");
+  const id = formData.get("id");
+
+  if (!id) {
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/admin/sponsors`);
+  }
 
   const supabase = supabaseAdmin();
-  const { error } = await supabase.from("sponsors").delete().eq("id", sponsorId);
+  const { error } = await supabase.from("sponsors").delete().eq("id", id);
   if (error) throw error;
 
   return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/admin/sponsors`);
