@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "../../lib/supabase";
 
-export const dynamic = "force-dynamic";revalidate = 0 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function monthKey(date) {
   const d = new Date(date);
