@@ -2,8 +2,15 @@ export const metadata = {
   title: "Meowtain Trail Club",
   description: "Connect your Strava, log every trail run, and climb this month's leaderboard.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://meowtaintrailclub.vercel.app"),
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Meowtain Trail Club",
+  },
   icons: {
     icon: "/Meowtain-logo.jpeg",
+    apple: "/apple-touch-icon.png",
   },
   openGraph: {
     title: "Meowtain Trail Club",
