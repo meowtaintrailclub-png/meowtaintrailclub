@@ -11,6 +11,8 @@ export async function POST(request) {
   const name = formData.get("name");
   const description = formData.get("description") || "";
   const price = formData.get("price");
+  const stockRaw = formData.get("stock_quantity");
+  const stock_quantity = !stockRaw || stockRaw === "" ? null : parseInt(stockRaw, 10);
   const file = formData.get("image");
 
   const supabase = supabaseAdmin();
@@ -33,7 +35,7 @@ export async function POST(request) {
 
   const { error: insertError } = await supabase
     .from("products")
-    .insert({ name, description, price, image_url });
+    .insert({ name, description, price, stock_quantity, image_url });
   if (insertError) throw insertError;
 
   return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/admin/products`);
