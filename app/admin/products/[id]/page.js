@@ -114,34 +114,35 @@ export default async function EditProduct({ params }) {
               <p className="mtc-empty-text">No variants yet — this product uses the single stock number above.</p>
             ) : (
               variants.map((v) => (
-                <form action="/api/admin/products/variants/update" method="POST" className="mtc-variant-row" key={v.id}>
-                  <input type="hidden" name="id" value={v.id} />
-                  <input type="hidden" name="product_id" value={product.id} />
+                <div className="mtc-variant-row" key={v.id}>
+                  <form action="/api/admin/products/variants/update" method="POST" style={{ display: "flex", gap: 8, flex: 1, flexWrap: "wrap", alignItems: "flex-end" }}>
+                    <input type="hidden" name="id" value={v.id} />
+                    <input type="hidden" name="product_id" value={product.id} />
 
-                  <div className="mtc-variant-field">
-                    <label>Size</label>
-                    <input type="text" name="size" defaultValue={v.size || ""} className="mtc-variant-input" placeholder="e.g. M" />
-                  </div>
-                  <div className="mtc-variant-field">
-                    <label>Color</label>
-                    <input type="text" name="color" defaultValue={v.color || ""} className="mtc-variant-input" placeholder="e.g. Black" />
-                  </div>
-                  <div className="mtc-variant-field">
-                    <label>Stock</label>
-                    <input type="number" name="stock_quantity" min="0" step="1" defaultValue={v.stock_quantity} required className="mtc-variant-input" />
-                  </div>
+                    <div className="mtc-variant-field">
+                      <label>Size</label>
+                      <input type="text" name="size" defaultValue={v.size || ""} className="mtc-variant-input" placeholder="e.g. M" />
+                    </div>
+                    <div className="mtc-variant-field">
+                      <label>Color</label>
+                      <input type="text" name="color" defaultValue={v.color || ""} className="mtc-variant-input" placeholder="e.g. Black" />
+                    </div>
+                    <div className="mtc-variant-field">
+                      <label>Stock</label>
+                      <input type="number" name="stock_quantity" min="0" step="1" defaultValue={v.stock_quantity} required className="mtc-variant-input" />
+                    </div>
 
-                  <button type="submit" className="mtc-btn-save">Save</button>
-                </form>
+                    <button type="submit" className="mtc-btn-save">Save</button>
+                  </form>
+
+                  <form action="/api/admin/products/variants/delete" method="POST">
+                    <input type="hidden" name="id" value={v.id} />
+                    <input type="hidden" name="product_id" value={product.id} />
+                    <button type="submit" className="mtc-btn-danger">Delete</button>
+                  </form>
+                </div>
               ))
             )}
-
-            {variants.map((v) => (
-              <form action="/api/admin/products/variants/delete" method="POST" key={`del-${v.id}`} style={{ display: "inline" }}>
-                <input type="hidden" name="id" value={v.id} />
-                <input type="hidden" name="product_id" value={product.id} />
-              </form>
-            ))}
 
             <form action="/api/admin/products/variants/add" method="POST" className="mtc-add-variant-form">
               <input type="hidden" name="product_id" value={product.id} />
