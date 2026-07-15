@@ -67,6 +67,18 @@ export default async function ProductsAdmin() {
         .mtc-product-actions { display: flex; gap: 8px; align-items: center; }
         .mtc-edit-link { color: #FF5A1F; text-decoration: none; font-weight: 600; font-size: 12px; }
         .mtc-edit-link:hover { text-decoration: underline; }
+        .mtc-variants-section { border-top: 1px solid #2A2A2A; margin-top: 6px; padding-top: 16px; }
+        .mtc-variants-label { font-size: 13px; color: #8A8A85; margin: 0 0 4px; }
+        .mtc-variants-hint { color: #5A5854; font-size: 12px; margin: 0 0 12px; line-height: 1.5; }
+        .mtc-variant-input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+        .mtc-variant-input-row input { padding: 8px 10px; box-sizing: border-box; background: #0D0D0D; border: 1px solid #2A2A2A; border-radius: 6px; color: #F5F1EA; font-family: 'Inter', sans-serif; font-size: 13px; }
+        .mtc-variant-input-row input:focus { outline: none; border-color: #FF5A1F; }
+        .mtc-variant-size { flex: 1; min-width: 60px; }
+        .mtc-variant-color { flex: 1; min-width: 70px; }
+        .mtc-variant-stock { width: 65px; }
+        .mtc-remove-row-btn { background: transparent; border: 1px solid #2A2A2A; color: #7A5A50; border-radius: 6px; padding: 8px 10px; font-size: 12px; cursor: pointer; flex-shrink: 0; }
+        .mtc-add-row-btn { background: transparent; border: 1px dashed #3A3733; color: #8A8A85; border-radius: 6px; padding: 8px 14px; font-size: 12px; cursor: pointer; margin-top: 4px; margin-bottom: 16px; }
+        .mtc-add-row-btn:hover { border-color: #FF5A1F; color: #FF5A1F; }
       `}</style>
 
       <div className="mtc-page">
@@ -91,10 +103,25 @@ export default async function ProductsAdmin() {
 
             <label className="mtc-field-label">Stock Quantity</label>
             <input type="number" name="stock_quantity" min="0" step="1" className="mtc-field-input" placeholder="Leave blank for unlimited" />
-            <p className="mtc-hint">Leave blank for unlimited stock.</p>
+            <p className="mtc-hint">Only used if you don't add any variants below.</p>
 
             <label className="mtc-field-label">Photo</label>
             <input type="file" name="image" accept="image/*" className="mtc-field-file" />
+
+            <div className="mtc-variants-section">
+              <p className="mtc-variants-label">Variants (optional)</p>
+              <p className="mtc-variants-hint">Add size/color options with their own stock counts. Leave all blank to skip and just use the single stock number above.</p>
+
+              <div id="mtc-variant-rows">
+                <div className="mtc-variant-input-row">
+                  <input type="text" name="variant_size" className="mtc-variant-size" placeholder="Size (e.g. M)" />
+                  <input type="text" name="variant_color" className="mtc-variant-color" placeholder="Color (e.g. Black)" />
+                  <input type="number" name="variant_stock" min="0" step="1" className="mtc-variant-stock" placeholder="Stock" />
+                </div>
+              </div>
+
+              <button type="button" id="mtc-add-variant-btn" className="mtc-add-row-btn">+ Add another variant</button>
+            </div>
 
             <div style={{ marginTop: 8 }}>
               <button type="submit" className="mtc-btn-primary">Add Product</button>
@@ -132,6 +159,33 @@ export default async function ProductsAdmin() {
           </div>
         </div>
       </div>
+
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            var addBtn = document.getElementById('mtc-add-variant-btn');
+            var rowsContainer = document.getElementById('mtc-variant-rows');
+
+            function addVariantRow() {
+              var row = document.createElement('div');
+              row.className = 'mtc-variant-input-row';
+              row.innerHTML =
+                '<input type="text" name="variant_size" class="mtc-variant-size" placeholder="Size (e.g. M)">' +
+                '<input type="text" name="variant_color" class="mtc-variant-color" placeholder="Color (e.g. Black)">' +
+                '<input type="number" name="variant_stock" min="0" step="1" class="mtc-variant-stock" placeholder="Stock">' +
+                '<button type="button" class="mtc-remove-row-btn">Remove</button>';
+              row.querySelector('.mtc-remove-row-btn').addEventListener('click', function () {
+                row.remove();
+              });
+              rowsContainer.appendChild(row);
+            }
+
+            if (addBtn) {
+              addBtn.addEventListener('click', addVariantRow);
+            }
+          `,
+        }}
+      />
     </>
   );
 }
