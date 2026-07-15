@@ -1,5 +1,4 @@
-app/admin/products/page.js — full file:
-javascriptimport { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { supabaseAdmin } from "../../../lib/supabase";
 import { isAdminLoggedIn } from "../../../lib/adminSession";
 
