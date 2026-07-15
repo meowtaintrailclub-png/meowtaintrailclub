@@ -1,4 +1,5 @@
-import { redirect } from "next/navigation";
+app/admin/products/page.js — full file:
+javascriptimport { redirect } from "next/navigation";
 import { supabaseAdmin } from "../../../lib/supabase";
 import { isAdminLoggedIn } from "../../../lib/adminSession";
 
@@ -12,7 +13,18 @@ async function getProducts() {
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return data || [];
+
+  const { data: variants, error: variantsError } = await supabase
+    .from("product_variants")
+    .select("product_id");
+  if (variantsError) throw variantsError;
+
+  const variantCounts = {};
+  for (const v of variants || []) {
+    variantCounts[v.product_id] = (variantCounts[v.product_id] || 0) + 1;
+  }
+
+  return (data || []).map((p) => ({ ...p, variantCount: variantCounts[p.id] || 0 }));
 }
 
 export default async function ProductsAdmin() {
@@ -102,7 +114,9 @@ export default async function ProductsAdmin() {
                     <p className="mtc-product-name">{p.name}</p>
                     <p className="mtc-product-price">RM {Number(p.price).toFixed(2)}</p>
                     <p className={`mtc-product-stock ${p.stock_quantity !== null && p.stock_quantity <= 5 ? "low" : "ok"}`}>
-                      {p.stock_quantity === null ? "Unlimited stock" : `${p.stock_quantity} in stock`}
+                      {p.variantCount > 0
+                        ? `${p.variantCount} variant${p.variantCount === 1 ? "" : "s"}`
+                        : p.stock_quantity === null ? "Unlimited stock" : `${p.stock_quantity} in stock`}
                       {!p.active && " · Inactive"}
                     </p>
                   </div>
