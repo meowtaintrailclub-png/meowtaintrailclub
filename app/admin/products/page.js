@@ -101,10 +101,6 @@ export default async function ProductsAdmin() {
             <label className="mtc-field-label">Price (RM)</label>
             <input type="number" name="price" step="0.01" min="0" required className="mtc-field-input" placeholder="e.g. 45.00" />
 
-            <label className="mtc-field-label">Stock Quantity</label>
-            <input type="number" name="stock_quantity" min="0" step="1" className="mtc-field-input" placeholder="Leave blank for unlimited" />
-            <p className="mtc-hint">Only used if you don't add any variants below.</p>
-
             <label className="mtc-field-label">Photo</label>
             <input type="file" name="image" accept="image/*" className="mtc-field-file" />
 
