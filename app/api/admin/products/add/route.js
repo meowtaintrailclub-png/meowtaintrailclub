@@ -33,10 +33,36 @@ export async function POST(request) {
     image_url = urlData.publicUrl;
   }
 
-  const { error: insertError } = await supabase
+  const { data: newProduct, error: insertError } = await supabase
     .from("products")
-    .insert({ name, description, price, stock_quantity, image_url });
+    .insert({ name, description, price, stock_quantity, image_url })
+    .select()
+    .single();
   if (insertError) throw insertError;
+
+  const variantSizes = formData.getAll("variant_size");
+  const variantColors = formData.getAll("variant_color");
+  const variantStocks = formData.getAll("variant_stock");
+
+  const variantsToInsert = [];
+  for (let i = 0; i < variantStocks.length; i++) {
+    const size = (variantSizes[i] || "").trim();
+    const color = (variantColors[i] || "").trim();
+    const stockRawVariant = variantStocks[i];
+    if (stockRawVariant !== "" && stockRawVariant != null && (size || color)) {
+      variantsToInsert.push({
+        product_id: newProduct.id,
+        size: size || null,
+        color: color || null,
+        stock_quantity: parseInt(stockRawVariant, 10) || 0,
+      });
+    }
+  }
+
+  if (variantsToInsert.length > 0) {
+    const { error: variantsError } = await supabase.from("product_variants").insert(variantsToInsert);
+    if (variantsError) throw variantsError;
+  }
 
   return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/admin/products`);
 }
