@@ -37,13 +37,24 @@ export default async function Cart({ searchParams }) {
     const productMap = {};
     for (const p of products || []) productMap[p.id] = p;
 
+    const variantIds = cart.map((item) => item.variant_id).filter(Boolean);
+    let variantMap = {};
+    if (variantIds.length > 0) {
+      const { data: variants } = await supabase
+        .from("product_variants")
+        .select("id, size, color, stock_quantity")
+        .in("id", variantIds);
+      for (const v of variants || []) variantMap[v.id] = v;
+    }
+
     items = cart
       .map((item) => {
         const product = productMap[item.product_id];
         if (!product) return null;
+        const variant = item.variant_id ? variantMap[item.variant_id] : null;
         const lineTotal = Number(product.price) * item.quantity;
         total += lineTotal;
-        return { ...item, product, lineTotal };
+        return { ...item, product, variant, lineTotal };
       })
       .filter(Boolean);
   }
@@ -101,31 +112,38 @@ export default async function Cart({ searchParams }) {
           ) : (
             <>
               <div className="mtc-items">
-                {items.map((item) => (
-                  <div className="mtc-item" key={`${item.product_id}-${item.size}`}>
-                    {item.product.image_url && (
-                      <img src={item.product.image_url} alt={item.product.name} className="mtc-item-img" />
-                    )}
-                    <div style={{ flex: 1 }}>
-                      <p className="mtc-item-name">{item.product.name}</p>
-                      <p className="mtc-item-meta">Size: {item.size}</p>
-                      <form action="/api/cart/update" method="POST" className="mtc-qty-form">
-                        <input type="hidden" name="product_id" value={item.product_id} />
-                        <input type="hidden" name="size" value={item.size} />
-                        <input type="number" name="quantity" min="1" defaultValue={item.quantity} className="mtc-qty-input" />
-                        <button type="submit" className="mtc-btn-ghost">Update</button>
-                      </form>
+                {items.map((item) => {
+                  const optionLabel = item.variant
+                    ? [item.variant.color, item.variant.size].filter(Boolean).join(" / ")
+                    : item.size;
+                  return (
+                    <div className="mtc-item" key={`${item.product_id}-${item.variant_id || item.size}`}>
+                      {item.product.image_url && (
+                        <img src={item.product.image_url} alt={item.product.name} className="mtc-item-img" />
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <p className="mtc-item-name">{item.product.name}</p>
+                        {optionLabel && <p className="mtc-item-meta">{optionLabel}</p>}
+                        <form action="/api/cart/update" method="POST" className="mtc-qty-form">
+                          <input type="hidden" name="product_id" value={item.product_id} />
+                          {item.variant_id && <input type="hidden" name="variant_id" value={item.variant_id} />}
+                          {item.size && <input type="hidden" name="size" value={item.size} />}
+                          <input type="number" name="quantity" min="1" defaultValue={item.quantity} className="mtc-qty-input" />
+                          <button type="submit" className="mtc-btn-ghost">Update</button>
+                        </form>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <p className="mtc-item-price">RM {item.lineTotal.toFixed(2)}</p>
+                        <form action="/api/cart/remove" method="POST">
+                          <input type="hidden" name="product_id" value={item.product_id} />
+                          {item.variant_id && <input type="hidden" name="variant_id" value={item.variant_id} />}
+                          {item.size && <input type="hidden" name="size" value={item.size} />}
+                          <button type="submit" className="mtc-remove-btn">Remove</button>
+                        </form>
+                      </div>
                     </div>
-                    <div style={{ textAlign: "right" }}>
-                      <p className="mtc-item-price">RM {item.lineTotal.toFixed(2)}</p>
-                      <form action="/api/cart/remove" method="POST">
-                        <input type="hidden" name="product_id" value={item.product_id} />
-                        <input type="hidden" name="size" value={item.size} />
-                        <button type="submit" className="mtc-remove-btn">Remove</button>
-                      </form>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="mtc-total-row">
