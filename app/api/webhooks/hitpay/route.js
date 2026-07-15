@@ -43,20 +43,34 @@ export async function POST(request) {
     if (order && order.status !== "failed") {
       const { data: items } = await supabase
         .from("order_items")
-        .select("product_id, quantity")
+        .select("product_id, variant_id, quantity")
         .eq("order_id", orderId);
 
       for (const item of items || []) {
-        const { data: product } = await supabase
-          .from("products")
-          .select("stock_quantity")
-          .eq("id", item.product_id)
-          .single();
-        if (product && product.stock_quantity !== null) {
-          await supabase
+        if (item.variant_id) {
+          const { data: variant } = await supabase
+            .from("product_variants")
+            .select("stock_quantity")
+            .eq("id", item.variant_id)
+            .single();
+          if (variant) {
+            await supabase
+              .from("product_variants")
+              .update({ stock_quantity: variant.stock_quantity + item.quantity })
+              .eq("id", item.variant_id);
+          }
+        } else {
+          const { data: product } = await supabase
             .from("products")
-            .update({ stock_quantity: product.stock_quantity + item.quantity })
-            .eq("id", item.product_id);
+            .select("stock_quantity")
+            .eq("id", item.product_id)
+            .single();
+          if (product && product.stock_quantity !== null) {
+            await supabase
+              .from("products")
+              .update({ stock_quantity: product.stock_quantity + item.quantity })
+              .eq("id", item.product_id);
+          }
         }
       }
     }
