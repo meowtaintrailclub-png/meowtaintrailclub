@@ -1,6 +1,4 @@
-Good news — app/admin/products/[id]/page.js (the edit page) is actually completely correct, no need to touch it. The problem is isolated entirely to app/admin/products/page.js (the list page), which currently has the edit page's content sitting in it by mistake instead of its own.
-Let's fix just that one file. Delete the current contents of app/admin/products/page.js completely and replace with this — this is the list page code (Add Product form + product list table), completely different from the edit page:
-javascriptimport { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { supabaseAdmin } from "../../../lib/supabase";
 import { isAdminLoggedIn } from "../../../lib/adminSession";
 
