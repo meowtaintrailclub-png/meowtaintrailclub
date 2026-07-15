@@ -4,17 +4,19 @@ import { getCart, CART_COOKIE_NAME } from "../../../../lib/cart";
 export async function POST(request) {
   const formData = await request.formData();
   const productId = formData.get("product_id");
-  const size = formData.get("size");
+  const variantId = formData.get("variant_id") || null;
+  const size = formData.get("size") || null;
   const quantity = Math.max(1, parseInt(formData.get("quantity") || "1", 10));
 
   const cart = getCart();
-  const existingIndex = cart.findIndex(
-    (item) => item.product_id === productId && item.size === size
+  const existingIndex = cart.findIndex((item) =>
+    item.product_id === productId &&
+    (variantId ? item.variant_id === variantId : item.size === size)
   );
   if (existingIndex >= 0) {
     cart[existingIndex].quantity += quantity;
   } else {
-    cart.push({ product_id: productId, size, quantity });
+    cart.push({ product_id: productId, variant_id: variantId, size, quantity });
   }
 
   const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/shop?added=1`);
