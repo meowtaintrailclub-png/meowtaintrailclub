@@ -8,14 +8,33 @@ const SIZES = ["XS", "S", "M", "L", "XL"];
 
 async function getProducts() {
   const supabase = supabaseAdmin();
-  const { data, error } = await supabase
+  const { data: products, error } = await supabase
     .from("products")
     .select("*")
     .eq("active", true)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return data || [];
+
+  const { data: variants, error: variantsError } = await supabase
+    .from("product_variants")
+    .select("*")
+    .order("created_at", { ascending: true });
+  if (variantsError) throw variantsError;
+
+  const variantsByProduct = {};
+  for (const v of variants || []) {
+    if (!variantsByProduct[v.product_id]) variantsByProduct[v.product_id] = [];
+    variantsByProduct[v.product_id].push(v);
+  }
+
+  return (products || []).map((p) => ({ ...p, variants: variantsByProduct[p.id] || [] }));
+}
+
+function variantLabel(v) {
+  const parts = [v.color, v.size].filter(Boolean);
+  const name = parts.length ? parts.join(" / ") : "Option";
+  return `${name} — ${v.stock_quantity} left`;
 }
 
 export default async function Shop({ searchParams }) {
@@ -72,9 +91,12 @@ export default async function Shop({ searchParams }) {
         ) : (
           <div className="mtc-grid">
             {products.map((p) => {
-              const isSoldOut = p.stock_quantity !== null && p.stock_quantity <= 0;
-              const isLowStock = p.stock_quantity !== null && p.stock_quantity > 0 && p.stock_quantity <= 5;
-              const maxQty = p.stock_quantity !== null ? p.stock_quantity : undefined;
+              const hasVariants = p.variants.length > 0;
+              const availableVariants = p.variants.filter((v) => v.stock_quantity > 0);
+              const isSoldOut = hasVariants
+                ? availableVariants.length === 0
+                : p.stock_quantity !== null && p.stock_quantity <= 0;
+              const isLowStock = !hasVariants && p.stock_quantity !== null && p.stock_quantity > 0 && p.stock_quantity <= 5;
 
               return (
                 <div className="mtc-product-card" key={p.id}>
@@ -90,20 +112,26 @@ export default async function Shop({ searchParams }) {
                   ) : (
                     <form action="/api/cart/add" method="POST" className="mtc-add-form">
                       <input type="hidden" name="product_id" value={p.id} />
-                      <select name="size" required defaultValue="" className="mtc-field-input">
-                        <option value="" disabled>Size</option>
-                        {SIZES.map((s) => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="number"
-                        name="quantity"
-                        min="1"
-                        max={maxQty}
-                        defaultValue="1"
-                        className="mtc-field-input"
-                      />
+
+                      {hasVariants ? (
+                        <select name="variant_id" required defaultValue="" className="mtc-field-input">
+                          <option value="" disabled>Choose option</option>
+                          {p.variants.map((v) => (
+                            <option key={v.id} value={v.id} disabled={v.stock_quantity <= 0}>
+                              {variantLabel(v)}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <select name="size" required defaultValue="" className="mtc-field-input">
+                          <option value="" disabled>Size</option>
+                          {SIZES.map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
+                      )}
+
+                      <input type="number" name="quantity" min="1" defaultValue="1" className="mtc-field-input" />
                       <button type="submit" className="mtc-btn-primary">Add to Cart</button>
                     </form>
                   )}
