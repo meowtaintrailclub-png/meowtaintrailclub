@@ -5,11 +5,15 @@ import { getCart } from "../../lib/cart";
 
 export const dynamic = "force-dynamic";
 
-export default async function Cart() {
+export default async function Cart({ searchParams }) {
   const runnerId = getLoggedInRunnerId();
   if (!runnerId) {
     redirect("/");
   }
+
+  const stockError = searchParams?.error === "stock";
+  const stockErrorProduct = searchParams?.product;
+  const stockErrorAvailable = searchParams?.available;
 
   const cart = getCart();
   const supabase = supabaseAdmin();
@@ -75,6 +79,7 @@ export default async function Cart() {
         .mtc-field-textarea { width: 100%; padding: 10px 12px; margin-bottom: 16px; box-sizing: border-box; background: #0D0D0D; border: 1px solid #2A2A2A; border-radius: 6px; color: #F5F1EA; font-family: 'Inter', sans-serif; font-size: 14px; min-height: 70px; resize: vertical; }
         .mtc-field-input:focus, .mtc-field-textarea:focus { outline: none; border-color: #FF5A1F; }
         .mtc-btn-primary { width: 100%; padding: 12px 22px; background: #FF5A1F; color: #0D0D0D; border: none; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; }
+        .mtc-error-banner { max-width: 560px; margin: 0 auto 20px; padding: 14px 16px; background: #1A1210; border: 1px solid #3A2420; border-radius: 8px; color: #E07050; font-size: 13px; line-height: 1.5; }
       `}</style>
 
       <div className="mtc-page">
@@ -85,6 +90,12 @@ export default async function Cart() {
         </div>
 
         <div className="mtc-body">
+          {stockError && (
+            <div className="mtc-error-banner">
+              Sorry — only {stockErrorAvailable} of "{stockErrorProduct}" left in stock. Please update the quantity in your cart before checking out.
+            </div>
+          )}
+
           {items.length === 0 ? (
             <div className="mtc-empty">Your cart is empty.</div>
           ) : (
