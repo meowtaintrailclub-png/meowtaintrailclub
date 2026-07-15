@@ -37,14 +37,42 @@ export async function POST(request) {
   const productMap = {};
   for (const p of products) productMap[p.id] = p;
 
-  // Combine cart lines by product (a product could appear twice with different sizes,
-  // but stock is tracked per-product, not per-size)
+  const variantIds = [...new Set(cart.map((item) => item.variant_id).filter(Boolean))];
+  let variantMap = {};
+  if (variantIds.length > 0) {
+    const { data: variants, error: variantsError } = await supabase
+      .from("product_variants")
+      .select("id, product_id, size, color, stock_quantity")
+      .in("id", variantIds);
+    if (variantsError) throw variantsError;
+    for (const v of variants) variantMap[v.id] = v;
+  }
+
+  // Combine needed quantities: per-variant for variant items, per-product for simple items
+  const neededPerVariant = {};
   const neededPerProduct = {};
   for (const item of cart) {
-    neededPerProduct[item.product_id] = (neededPerProduct[item.product_id] || 0) + item.quantity;
+    if (item.variant_id) {
+      neededPerVariant[item.variant_id] = (neededPerVariant[item.variant_id] || 0) + item.quantity;
+    } else {
+      neededPerProduct[item.product_id] = (neededPerProduct[item.product_id] || 0) + item.quantity;
+    }
   }
 
   // Check stock BEFORE creating anything — this is what actually prevents overselling
+  for (const [variantId, neededQty] of Object.entries(neededPerVariant)) {
+    const variant = variantMap[variantId];
+    if (!variant) continue;
+    if (neededQty > variant.stock_quantity) {
+      const product = productMap[variant.product_id];
+      const params = new URLSearchParams({
+        error: "stock",
+        product: product ? product.name : "item",
+        available: String(variant.stock_quantity),
+      });
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/cart?${params.toString()}`, 303);
+    }
+  }
   for (const [productId, neededQty] of Object.entries(neededPerProduct)) {
     const product = productMap[productId];
     if (!product) continue;
@@ -63,12 +91,15 @@ export async function POST(request) {
   for (const item of cart) {
     const product = productMap[item.product_id];
     if (!product) continue;
+    const variant = item.variant_id ? variantMap[item.variant_id] : null;
     const lineTotal = Number(product.price) * item.quantity;
     total += lineTotal;
     orderItemsToInsert.push({
       product_id: product.id,
       product_name: product.name,
-      size: item.size,
+      variant_id: item.variant_id || null,
+      size: variant ? variant.size : item.size,
+      color: variant ? variant.color : null,
       quantity: item.quantity,
       unit_price: product.price,
     });
@@ -99,6 +130,14 @@ export async function POST(request) {
   // Reserve stock now, at order creation — this is what stops two people both
   // "successfully" checking out for the last item. If payment later fails,
   // the webhook restores it.
+  for (const [variantId, neededQty] of Object.entries(neededPerVariant)) {
+    const variant = variantMap[variantId];
+    if (!variant) continue;
+    await supabase
+      .from("product_variants")
+      .update({ stock_quantity: variant.stock_quantity - neededQty })
+      .eq("id", variantId);
+  }
   for (const [productId, neededQty] of Object.entries(neededPerProduct)) {
     const product = productMap[productId];
     if (!product || product.stock_quantity === null) continue;
@@ -133,6 +172,14 @@ export async function POST(request) {
     console.error("HitPay error", errText);
     await supabase.from("orders").update({ status: "failed" }).eq("id", order.id);
     // Restore stock since this order won't be paid
+    for (const [variantId, neededQty] of Object.entries(neededPerVariant)) {
+      const variant = variantMap[variantId];
+      if (!variant) continue;
+      await supabase
+        .from("product_variants")
+        .update({ stock_quantity: variant.stock_quantity })
+        .eq("id", variantId);
+    }
     for (const [productId, neededQty] of Object.entries(neededPerProduct)) {
       const product = productMap[productId];
       if (!product || product.stock_quantity === null) continue;
