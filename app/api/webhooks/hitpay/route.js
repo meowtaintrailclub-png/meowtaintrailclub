@@ -31,6 +31,37 @@ export async function POST(request) {
   const newStatus =
     fields.status === "completed" ? "paid" : fields.status === "failed" ? "failed" : fields.status;
 
+  // If payment failed, restore any stock we reserved at checkout time
+  if (newStatus === "failed") {
+    const { data: order } = await supabase
+      .from("orders")
+      .select("status")
+      .eq("id", orderId)
+      .single();
+
+    // Only restore once — if this order was already marked failed before, don't double-restore
+    if (order && order.status !== "failed") {
+      const { data: items } = await supabase
+        .from("order_items")
+        .select("product_id, quantity")
+        .eq("order_id", orderId);
+
+      for (const item of items || []) {
+        const { data: product } = await supabase
+          .from("products")
+          .select("stock_quantity")
+          .eq("id", item.product_id)
+          .single();
+        if (product && product.stock_quantity !== null) {
+          await supabase
+            .from("products")
+            .update({ stock_quantity: product.stock_quantity + item.quantity })
+            .eq("id", item.product_id);
+        }
+      }
+    }
+  }
+
   await supabase
     .from("orders")
     .update({
