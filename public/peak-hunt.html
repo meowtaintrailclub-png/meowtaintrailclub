@@ -91,6 +91,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--display);overflow:hi
 .recbtn:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
 @keyframes pulse{50%{opacity:.35}}
 #clipSheet{z-index:14}
+.clipnote{margin:0 0 4px;font-size:13px;line-height:1.4;color:#9fe0b0;text-align:center}
 .card video{display:block;width:100%;max-height:52vh;border-radius:12px;background:#000;margin:12px 0}
 .card a.btn{display:block;text-decoration:none;margin-top:8px}
 @media (prefers-reduced-motion:reduce){.box svg,.radar .sweep,.recbtn.on .rd{animation:none}}
@@ -203,6 +204,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--display);overflow:hi
     <div class="card">
       <div class="eyebrow">Your unboxing clip</div>
       <video id="clipVid" playsinline controls></video>
+      <p class="clipnote" id="clipNote" hidden></p>
       <button class="btn primary" id="clipShare" type="button">Share or save</button>
       <a class="btn" id="clipSave" download>Download video</a>
       <button class="btn" id="clipDiscard" type="button">Close</button>
@@ -631,8 +633,16 @@ function stopRec(){
   if(r.mr&&r.mr.state!=='inactive'){try{r.mr.requestData()}catch(_){}r.mr.stop()}
   else if(r.mic)r.mic.getTracks().forEach(t=>t.stop());
 }
-$('recBtn').onclick=()=>{rec?stopRec():startRec()};
+$('recBtn').onclick=()=>{if(rec){stopTapAt=Date.now();stopRec()}else startRec()};
 
+const IS_IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+let stopTapAt=0;
+function clipNote(t){const n=$('clipNote');n.textContent=t||'';n.hidden=!t}
+async function shareClip(){
+  if(!clip)return false;
+  try{await navigator.share({files:[clip.file],title:'My Bukit-X Peak Hunt'});return true}
+  catch(e){return e&&e.name==='AbortError'} // AbortError = they closed the sheet themselves
+}
 function showClip(blob,type){
   const ext=type.includes('mp4')?'mp4':'webm', d=new Date(), pad=n=>String(n).padStart(2,'0');
   const name=`bukit-x-peak-hunt-${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.${ext}`;
@@ -643,10 +653,22 @@ function showClip(blob,type){
   const canShare=!!(navigator.canShare&&navigator.canShare({files:[clip.file]}));
   $('clipShare').hidden=!canShare;
   $('clipSheet').hidden=false;
+  if(IS_IOS){
+    // iPhone never lets a web page write to Photos by itself: the share sheet's "Save Video" is the only way in.
+    $('clipShare').textContent='Save to Photos';a.textContent='Save to Files';
+    clipNote(canShare?'Tap Save to Photos, then "Save Video".':'');
+    // Right after their Stop tap, open the share sheet straight away so it's one tap: "Save Video".
+    if(canShare&&Date.now()-stopTapAt<4000)shareClip().then(ok=>{if(ok)clipNote('Pick "Save Video" to put it in Photos. Tap Save to Photos to open it again.')});
+  }else{
+    // Android: save the file at once. It lands in Downloads, which Gallery / Google Photos shows as the "Download" album.
+    $('clipShare').textContent='Share';
+    try{a.click();clipNote('Saved ✓ Find it in your Gallery, in the Download album.');a.textContent='Save again'}
+    catch(_){clipNote('')}
+  }
 }
 $('clipShare').onclick=async()=>{
-  if(!clip)return;
-  try{await navigator.share({files:[clip.file],title:'My Bukit-X Peak Hunt'})}catch(_){}
+  const ok=await shareClip();
+  if(ok&&IS_IOS)clipNote('Pick "Save Video" to put it in Photos.');
 };
 $('clipDiscard').onclick=()=>{
   const v=$('clipVid');v.pause();v.removeAttribute('src');v.load();
