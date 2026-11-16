@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c1210">
+<title>Sri Bintang Peak Hunt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: full-screen viewfinder. HUD top, box floats in view, radar + hint bottom. Deliberately single dark look (camera UI). */
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+:root{
+  --bg:#0c1210; --panel:rgba(12,18,16,.72); --line:rgba(226,236,228,.16);
+  --fg:#eef3ee; --muted:#9fb0a5; --amber:#ffb340; --amber-deep:#e2761b; --leaf:#5fd08a;
+  --display:"Archivo",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--display);overflow:hidden;-webkit-user-select:none;user-select:none}
+.app{position:relative;height:100%;width:100%;overflow:hidden;touch-action:none}
+#view,#cam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#cam{display:block}
+.hud{position:absolute;left:0;right:0;top:0;padding-top:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;justify-content:space-between;gap:10px;align-items:flex-start;pointer-events:none;z-index:3}
+.place{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;backdrop-filter:blur(8px);min-width:0}
+.place h1{margin:0;font-size:17px;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+.place .meta{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px}
+.chips{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.chip{font-family:var(--mono);font-size:11px;padding:5px 9px;border-radius:999px;background:var(--panel);border:1px solid var(--line);white-space:nowrap}
+.chip b{color:var(--amber);font-weight:500}
+.chip.ok{color:var(--leaf)}
+.compass{position:absolute;top:84px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:12px;background:var(--panel);border:1px solid var(--line);padding:4px 10px;border-radius:8px;z-index:3;font-variant-numeric:tabular-nums;pointer-events:none}
+.cross{position:absolute;left:50%;top:46%;width:46px;height:46px;transform:translate(-50%,-50%);border:1.5px solid rgba(238,243,238,.35);border-radius:50%;pointer-events:none;z-index:2}
+.box{position:absolute;top:46%;width:120px;height:120px;margin-left:-60px;margin-top:-60px;z-index:2;border:0;background:none;padding:0;cursor:pointer;transition:filter .2s}
+.box[hidden]{display:none!important}
+.box svg{width:100%;height:100%;animation:bob 2.4s ease-in-out infinite;filter:drop-shadow(0 8px 18px rgba(0,0,0,.5))}
+.box.near svg{filter:drop-shadow(0 0 22px var(--amber)) drop-shadow(0 8px 18px rgba(0,0,0,.5))}
+.box .tap{position:absolute;left:50%;bottom:-26px;transform:translateX(-50%);font-size:12px;font-weight:700;background:var(--amber);color:#2a1600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
+.bottom{position:absolute;left:0;right:0;bottom:0;padding-bottom:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:12px;align-items:center;z-index:3}
+.radar{flex:none;width:92px;height:92px;border-radius:50%;background:var(--panel);border:1px solid var(--line);position:relative;backdrop-filter:blur(8px);overflow:hidden}
+.radar::before,.radar::after{content:"";position:absolute;inset:22%;border-radius:50%;border:1px solid var(--line)}
+.radar::after{inset:47%;background:var(--fg);border:0}
+.radar .sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(255,179,64,.35),transparent 25%);animation:spin 3s linear infinite}
+.radar .fov{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from -30deg,rgba(238,243,238,.12) 0 60deg,transparent 0)}
+.radar .dot{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px var(--amber);left:50%;top:50%}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hint{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:11px 13px;backdrop-filter:blur(8px)}
+.hint strong{display:block;font-size:16px;font-weight:800}
+.hint span{display:block;font-size:13px;color:var(--muted);margin-top:2px;line-height:1.35}
+.hint .row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.btn{font-family:var(--display);font-weight:700;font-size:13px;border-radius:10px;border:1px solid var(--line);background:rgba(238,243,238,.08);color:var(--fg);padding:7px 11px;cursor:pointer}
+.btn.primary{background:var(--amber);color:#2a1600;border-color:transparent}
+.btn:focus-visible,.box:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+.sheet{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(6,10,8,.82);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));backdrop-filter:blur(6px)}
+.card{width:100%;max-width:380px;background:#141c18;border:1px solid var(--line);border-radius:20px;padding:24px 20px;text-align:center}
+.card h2{margin:6px 0 6px;font-size:26px;font-weight:800;letter-spacing:-.02em;text-wrap:balance}
+.card p{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 16px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--amber)}
+.steps{text-align:left;font-size:13px;color:var(--fg);margin:0 0 18px;padding-left:20px;line-height:1.6}
+.card .btn{width:100%;padding:12px;font-size:15px}
+.card .btn+.btn{margin-top:8px}
+.prize{font-size:64px;line-height:1;margin:6px 0}
+.rar{display:inline-block;font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid currentColor;margin-bottom:6px}
+.code{font-family:var(--mono);font-size:18px;letter-spacing:.08em;background:rgba(255,179,64,.12);border:1px dashed var(--amber);border-radius:10px;padding:10px;margin:0 0 6px;color:var(--amber);user-select:all;-webkit-user-select:all}
+.note{font-size:11px;color:var(--muted);margin-bottom:14px}
+.burst{position:absolute;inset:0;pointer-events:none;z-index:11}
+@media (prefers-reduced-motion:reduce){.box svg,.radar .sweep{animation:none}}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <canvas id="view"></canvas>
+  <video id="cam" playsinline muted autoplay hidden></video>
+
+  <div class="hud">
+    <div class="place">
+      <h1>Bukit Sri Bintang</h1>
+      <div class="meta">Summit 212 m · 3.1806°N 101.6422°E</div>
+    </div>
+    <div class="chips">
+      <div class="chip" id="modeChip">Demo mode</div>
+      <div class="chip" id="distChip">GPS —</div>
+    </div>
+  </div>
+  <div class="compass" id="compass">N 0°</div>
+  <div class="cross"></div>
+
+  <button class="box" id="box" hidden aria-label="Open the blind box">
+    <svg viewBox="0 0 120 120" aria-hidden="true">
+      <polygon points="60,18 104,38 60,58 16,38" fill="#ffd27a"/>
+      <polygon points="16,38 60,58 60,108 16,88" fill="#e2761b"/>
+      <polygon points="104,38 60,58 60,108 104,88" fill="#ffb340"/>
+      <polygon points="38,28 82,48 82,52 38,32" fill="#0c1210" opacity=".25"/>
+      <polygon points="54,56 66,56 66,106 54,104" fill="#5fd08a"/>
+      <polygon points="54,21 66,21 82,48 70,48" fill="#5fd08a"/>
+      <text x="82" y="82" font-family="Archivo,sans-serif" font-weight="800" font-size="22" fill="#2a1600" text-anchor="middle">?</text>
+      <text x="36" y="82" font-family="Archivo,sans-serif" font-weight="800" font-size="22" fill="#2a1600" text-anchor="middle">?</text>
+    </svg>
+    <span class="tap" id="tapLabel" hidden>Tap to open</span>
+  </button>
+
+  <div class="bottom">
+    <div class="radar" aria-hidden="true"><div class="fov"></div><div class="sweep"></div><div class="dot" id="dot"></div></div>
+    <div class="hint" id="hint">
+      <strong id="hintTitle">Get to the summit</strong>
+      <span id="hintText">The blind box only appears at the peak.</span>
+      <div class="row" id="hintRow"></div>
+    </div>
+  </div>
+
+  <div class="sheet" id="startSheet">
+    <div class="card">
+      <div class="eyebrow">Peak Hunt · Prototype</div>
+      <h2>A blind box is hiding on the summit</h2>
+      <p>Climb to the top of Bukit Sri Bintang, open the camera and turn around slowly. The box is floating in one direction only.</p>
+      <ol class="steps">
+        <li>Reach the summit zone (within 60 m)</li>
+        <li>Point your camera around you</li>
+        <li>Follow the radar until the box appears</li>
+        <li>Tap it to open your prize</li>
+      </ol>
+      <button class="btn primary" id="startReal">Start hunt (camera + GPS)</button>
+      <button class="btn" id="startCamTest">Test camera + AR here (skip GPS)</button>
+      <button class="btn" id="startDemo">Try demo without camera</button>
+    </div>
+  </div>
+
+  <div class="sheet" id="prizeSheet" hidden>
+    <div class="card" id="prizeCard"></div>
+  </div>
+  <canvas class="burst" id="burst"></canvas>
+</div>
+
+<script>
+(()=>{
+const SUMMIT={lat:3.18056,lon:101.64222}, ZONE_M=60, FOV=60;
+const $=id=>document.getElementById(id);
+const view=$('view'), ctx=view.getContext('2d'), cam=$('cam'), box=$('box');
+let W=0,H=0,dpr=1;
+const state={mode:'demo',heading:20,targetHeading:20,inZone:false,dist:null,gpsOk:false,camOk:false,compassOk:false,opened:false,started:false,
+  target:Math.floor(Math.random()*360)};
+
+function resize(){dpr=Math.min(2,window.devicePixelRatio||1);W=view.clientWidth;H=view.clientHeight;view.width=W*dpr;view.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
+addEventListener('resize',resize);resize();
+
+const norm=a=>((a%360)+360)%360;
+const diff=(a,b)=>((a-b+540)%360)-180;
+function haversine(a,b){const R=6371000,t=Math.PI/180;const dLat=(b.lat-a.lat)*t,dLon=(b.lon-a.lon)*t;
+  const h=Math.sin(dLat/2)**2+Math.cos(a.lat*t)*Math.cos(b.lat*t)*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+
+/* ---------- simulated summit panorama (demo + no camera) ---------- */
+function ridge(deg,seed,amp){let y=0;for(let k=1;k<=4;k++)y+=Math.sin((deg*k*Math.PI/180)+seed*k)*amp/k;return y}
+function drawPanorama(){
+  const pxPerDeg=W/FOV, h=state.heading, horizon=H*0.52;
+  const g=ctx.createLinearGradient(0,0,0,horizon);
+  g.addColorStop(0,'#1d2b4a');g.addColorStop(.55,'#d77a52');g.addColorStop(1,'#f6c28b');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // sun low in the east
+  const sx=W/2+diff(95,h)*pxPerDeg; ctx.fillStyle='rgba(255,226,170,.9)';ctx.beginPath();ctx.arc(sx,horizon-40,22,0,7);ctx.fill();
+  const layers=[{c:'#6a5e74',s:1.3,a:26,b:-18},{c:'#4a4a5e',s:2.1,a:20,b:-4},{c:'#2e3a3a',s:3.7,a:14,b:10}];
+  for(const L of layers){ctx.fillStyle=L.c;ctx.beginPath();ctx.moveTo(0,H);
+    for(let x=0;x<=W;x+=6){const d=h+(x-W/2)/pxPerDeg;ctx.lineTo(x,horizon+L.b-Math.abs(ridge(d,L.s,L.a)))}
+    ctx.lineTo(W,H);ctx.fill()}
+  // KL city skyline to the south-east (bearing ~140-175)
+  ctx.fillStyle='#1c2430';
+  for(let d=138;d<=176;d+=1.6){const x=W/2+diff(d,h)*pxPerDeg; if(x<-20||x>W+20)continue;
+    const r=Math.abs(Math.sin(d*12.9898)*43758.5453)%1; const bh=14+r*46+(Math.abs(d-157)<1.2?60:0);
+    ctx.fillRect(x,horizon+6-bh,pxPerDeg*1.2,bh)}
+  const tw=W/2+diff(150,h)*pxPerDeg; if(tw>-20&&tw<W+20){ctx.fillRect(tw,horizon-74,3,80);ctx.beginPath();ctx.arc(tw+1.5,horizon-66,7,0,7);ctx.fill()}
+  // foreground summit canopy
+  ctx.fillStyle='#14201a';ctx.beginPath();ctx.moveTo(0,H);
+  for(let x=0;x<=W;x+=5){const d=h+(x-W/2)/pxPerDeg;ctx.lineTo(x,H*0.74-Math.abs(ridge(d*3,0.7,22))-Math.abs(Math.sin(d*0.9))*18)}
+  ctx.lineTo(W,H);ctx.fill();
+  // summit signboard at bearing 300
+  const sb=W/2+diff(300,h)*pxPerDeg; if(sb>-80&&sb<W+80){ctx.fillStyle='#3b2a1a';ctx.fillRect(sb-2,H*0.62,4,H*0.14);
+    ctx.fillStyle='#e9dfc8';ctx.fillRect(sb-46,H*0.57,92,30);ctx.fillStyle='#1d2b20';ctx.font='700 10px Archivo,sans-serif';ctx.textAlign='center';
+    ctx.fillText('PUNCAK',sb,H*0.57+12);ctx.fillText('SRI BINTANG 212m',sb,H*0.57+24)}
+}
+
+function draw(){
+  // smooth heading
+  state.heading=norm(state.heading+diff(state.targetHeading,state.heading)*0.2);
+  if(state.camOk){ctx.clearRect(0,0,W,H)} else drawPanorama();
+  const h=Math.round(state.heading);
+  const dirs=['N','NE','E','SE','S','SW','W','NW'];
+  $('compass').textContent=dirs[Math.round(h/45)%8]+' '+h+'°';
+  const showBox=state.started&&state.inZone&&!state.opened;
+  const d=diff(state.target,state.heading);
+  // radar dot: relative bearing, 0 = straight ahead (top)
+  const ang=(d-90)*Math.PI/180, r=30;
+  $('dot').style.left=(46+Math.cos(ang)*r)+'px';$('dot').style.top=(46+Math.sin(ang)*r)+'px';
+  $('dot').style.opacity=showBox?1:0;
+  if(showBox&&Math.abs(d)<FOV/2+8){
+    box.hidden=false; box.style.left=(W/2+d*(W/FOV))+'px';
+    const near=Math.abs(d)<9; box.classList.toggle('near',near); $('tapLabel').hidden=!near;
+  } else box.hidden=true;
+  updateHint(d);
+  requestAnimationFrame(draw);
+}
+
+let lastHint='';
+function setHint(title,text,buttons){
+  const key=title+text+(buttons||[]).map(b=>b[0]).join();
+  if(key===lastHint)return;lastHint=key;
+  $('hintTitle').textContent=title;$('hintText').textContent=text;
+  const row=$('hintRow');row.innerHTML='';
+  (buttons||[]).forEach(([label,fn,primary])=>{const b=document.createElement('button');b.className='btn'+(primary?' primary':'');b.textContent=label;b.onclick=fn;row.appendChild(b)});
+}
+function updateHint(d){
+  if(!state.started)return;
+  if(state.opened){setHint('Box opened','Come back tomorrow for a new box on this peak.',[['Hunt again (demo)',reset]]);return}
+  if(!state.inZone){
+    const far=state.dist!=null?(state.dist>=1000?(state.dist/1000).toFixed(1)+' km':Math.round(state.dist)+' m'):'unknown distance';
+    setHint('Keep climbing','You are '+far+' from the summit. The box appears within '+ZONE_M+' m of the peak.',[['Teleport to summit (demo)',()=>{state.inZone=true;state.mode='demo';renderChips()},true]]);
+    return}
+  const a=Math.abs(d);
+  const turn=d>0?'right':'left';
+  const drag=state.compassOk?'Turn':'Drag to turn';
+  if(a<9) setHint('Found it!','Tap the box to open your prize.');
+  else if(a<35) setHint('Very warm','It is just to your '+turn+'. '+drag+' a little more.');
+  else if(a<90) setHint('Getting warmer',drag+' '+turn+'. Watch the orange dot on the radar.');
+  else setHint('Cold','The box is behind you. '+drag+' around slowly.');
+}
+
+/* ---------- input: drag to look around (demo / no compass) ---------- */
+let dragX=null;
+$('app').addEventListener('pointerdown',e=>{if(e.target.closest('button,.sheet'))return;dragX=e.clientX});
+addEventListener('pointermove',e=>{if(dragX==null||state.compassOk)return;state.targetHeading=norm(state.targetHeading-(e.clientX-dragX)*FOV/W);dragX=e.clientX});
+addEventListener('pointerup',()=>dragX=null);
+addEventListener('keydown',e=>{if(state.compassOk)return;if(e.key==='ArrowLeft')state.targetHeading=norm(state.targetHeading-8);if(e.key==='ArrowRight')state.targetHeading=norm(state.targetHeading+8)});
+
+/* ---------- real sensors ---------- */
+function onOrient(e){
+  let h=null;
+  if(typeof e.webkitCompassHeading==='number')h=e.webkitCompassHeading;
+  else if(e.absolute&&e.alpha!=null)h=360-e.alpha;
+  if(h==null)return;
+  const so=(screen.orientation&&screen.orientation.angle)||0;
+  state.targetHeading=norm(h+so); if(!state.compassOk){state.compassOk=true;renderChips()}
+}
+async function startCompass(){
+  try{
+    if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+      const p=await DeviceOrientationEvent.requestPermission(); if(p!=='granted')return;
+    }
+    addEventListener('deviceorientationabsolute',onOrient,true);
+    addEventListener('deviceorientation',onOrient,true);
+  }catch(_){}
+}
+async function startCamera(){
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
+    const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    cam.srcObject=s;cam.hidden=false;await cam.play();state.camOk=true;
+  }catch(_){cam.hidden=true}
+}
+function startGPS(){
+  return new Promise(res=>{
+    if(!navigator.geolocation){res();return}
+    let done=false;const fin=()=>{if(!done){done=true;res()}};
+    try{
+      navigator.geolocation.watchPosition(p=>{
+        state.gpsOk=true;state.dist=haversine({lat:p.coords.latitude,lon:p.coords.longitude},SUMMIT);
+        if(state.mode==='real')state.inZone=state.dist<=ZONE_M;renderChips();fin();
+      },()=>fin(),{enableHighAccuracy:true,maximumAge:5000,timeout:10000});
+    }catch(_){fin()}
+    setTimeout(fin,8000);
+  });
+}
+function renderChips(){
+  const live=state.camOk||state.gpsOk||state.compassOk;
+  $('modeChip').textContent=state.mode==='real'&&live?'Live: '+[state.camOk&&'cam',state.gpsOk&&'GPS',state.compassOk&&'compass'].filter(Boolean).join(' + '):'Demo mode';
+  $('modeChip').classList.toggle('ok',state.mode==='real'&&live);
+  const dc=$('distChip');
+  if(state.inZone&&!state.gpsOk&&state.camOk)dc.innerHTML='<b>●</b> Test zone (GPS skipped)';
+  else if(state.inZone)dc.innerHTML='<b>●</b> In summit zone';
+  else if(state.dist!=null)dc.textContent='Summit '+(state.dist>=1000?(state.dist/1000).toFixed(1)+' km':Math.round(state.dist)+' m');
+  else dc.textContent='GPS —';
+}
+
+$('startReal').onclick=async()=>{
+  $('startSheet').hidden=true;state.mode='real';state.started=true;
+  setHint('Starting sensors…','Allow camera, location and motion when asked.');
+  await Promise.all([startCompass(),startCamera(),startGPS()]);
+  if(!state.camOk&&!state.gpsOk&&!state.compassOk){state.mode='demo';state.inZone=true;
+    setHint('Demo mode','Camera and GPS are not available here, so this is the simulated summit. Drag to look around.');lastHint=''}
+  renderChips();
+};
+$('startCamTest').onclick=async()=>{
+  $('startSheet').hidden=true;state.mode='real';state.started=true;state.inZone=true;
+  setHint('Starting camera…','Allow camera and motion when asked.');
+  await Promise.all([startCompass(),startCamera()]);
+  if(!state.camOk){state.mode='demo';setHint('Camera not available','Showing the simulated summit instead. Drag to look around.');lastHint=''}
+  renderChips();
+  $('distChip').innerHTML='<b>●</b> Test zone (GPS skipped)';
+};
+$('startDemo').onclick=()=>{$('startSheet').hidden=true;state.mode='demo';state.started=true;state.inZone=true;renderChips()};
+
+/* ---------- prize ---------- */
+const PRIZES=[
+  {w:55,rar:'Common',col:'#9fb0a5',icon:'🏅',name:'Sri Bintang Summit Badge',desc:'Added to your peak collection. Collect 5 KL peaks to unlock a rare box.'},
+  {w:30,rar:'Rare',col:'#5fd08a',icon:'🎟️',name:'RM10 off at K Concept',desc:'Use this code at checkout on any Kailas item.',code:true},
+  {w:12,rar:'Epic',col:'#ffb340',icon:'🧦',name:'Kailas trail socks',desc:'Show this screen at the Meowtain Trail booth to collect.',code:true},
+  {w:3,rar:'Legendary',col:'#ff7a59',icon:'👟',name:'Lucky draw: Kailas trail shoes',desc:'You are entered into this month\'s shoe draw.',code:true}
+];
+function pick(){let t=Math.random()*100;for(const p of PRIZES){if((t-=p.w)<0)return p}return PRIZES[0]}
+function code(){const c='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let s='SB-';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
+box.onclick=()=>{
+  if(Math.abs(diff(state.target,state.heading))>=9)return;
+  state.opened=true;box.hidden=true;burst();
+  const p=pick();const card=$('prizeCard');
+  card.innerHTML=`<div class="eyebrow">Blind box opened</div><div class="prize">${p.icon}</div>
+    <span class="rar" style="color:${p.col}">${p.rar}</span><h2>${p.name}</h2><p>${p.desc}</p>
+    ${p.code?`<div class="code">${code()}</div><div class="note">Prototype code for testing. Not redeemable yet.</div>`:''}
+    <button class="btn primary" id="closePrize">Done</button>`;
+  $('prizeSheet').hidden=false;$('closePrize').onclick=()=>{$('prizeSheet').hidden=true};
+};
+function reset(){state.opened=false;state.target=Math.floor(Math.random()*360);lastHint=''}
+
+/* ---------- confetti ---------- */
+function burst(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const c=$('burst'),x=c.getContext('2d');c.width=W*dpr;c.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);
+  const cols=['#ffb340','#5fd08a','#ffd27a','#e2761b','#eef3ee'];
+  const ps=Array.from({length:90},()=>({x:W/2,y:H*0.46,vx:(Math.random()-.5)*11,vy:-Math.random()*12-3,c:cols[Math.floor(Math.random()*5)],s:4+Math.random()*5,r:Math.random()*6}));
+  let f=0;(function step(){x.clearRect(0,0,W,H);ps.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.r+=.2;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);x.restore()});
+    if(++f<90)requestAnimationFrame(step);else x.clearRect(0,0,W,H)})();
+}
+
+renderChips();draw();
+})();
+</script>
+</body>
+</html>
