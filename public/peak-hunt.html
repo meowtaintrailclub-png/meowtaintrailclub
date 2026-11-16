@@ -83,7 +83,17 @@ body{background:var(--bg);color:var(--fg);font-family:var(--display);overflow:hi
 .dim{position:absolute;inset:0;background:rgba(6,10,8,.6);opacity:0;transition:opacity .3s;pointer-events:none;z-index:8}
 .dim.show{opacity:1}
 .flash{position:absolute;inset:0;background:#fff7e6;opacity:0;pointer-events:none;z-index:12}
-@media (prefers-reduced-motion:reduce){.box svg,.radar .sweep{animation:none}}
+.recbtn{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:124px;z-index:13;display:flex;align-items:center;gap:8px;height:44px;padding:0 14px 0 11px;border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--fg);font:700 13px var(--display);backdrop-filter:blur(8px);cursor:pointer}
+.recbtn .rd{width:18px;height:18px;border-radius:50%;background:#ff3b30;box-shadow:0 0 0 3px rgba(255,59,48,.25);transition:border-radius .2s,width .2s,height .2s}
+.recbtn .t{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.recbtn.on{border-color:#ff3b30;background:rgba(40,8,6,.78)}
+.recbtn.on .rd{width:14px;height:14px;margin:2px;border-radius:3px;animation:pulse 1s ease-in-out infinite}
+.recbtn:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+@keyframes pulse{50%{opacity:.35}}
+#clipSheet{z-index:14}
+.card video{display:block;width:100%;max-height:52vh;border-radius:12px;background:#000;margin:12px 0}
+.card a.btn{display:block;text-decoration:none;margin-top:8px}
+@media (prefers-reduced-motion:reduce){.box svg,.radar .sweep,.recbtn.on .rd{animation:none}}
 </style>
 </head>
 <body>
@@ -144,6 +154,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--display);overflow:hi
         <li>Point your camera around you</li>
         <li>Follow the radar until the box appears</li>
         <li>Tap it to open your prize</li>
+        <li>Optional: tap Record to film your unboxing</li>
       </ol>
       <button class="btn primary" id="startReal">Start hunt (camera + GPS)</button>
       <button class="btn" id="startCamTest">Test camera + AR here (skip GPS)</button>
@@ -185,6 +196,18 @@ body{background:var(--bg);color:var(--fg);font-family:var(--display);overflow:hi
   <canvas class="burst" id="burst"></canvas>
   <div class="dim" id="dim"></div>
   <div class="flash" id="flash"></div>
+
+  <button class="recbtn" id="recBtn" type="button" hidden aria-label="Start recording"><span class="rd"></span><span class="t" id="recTxt">Record</span></button>
+
+  <div class="sheet" id="clipSheet" hidden>
+    <div class="card">
+      <div class="eyebrow">Your unboxing clip</div>
+      <video id="clipVid" playsinline controls></video>
+      <button class="btn primary" id="clipShare" type="button">Share or save</button>
+      <a class="btn" id="clipSave" download>Download video</a>
+      <button class="btn" id="clipDiscard" type="button">Close</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -252,6 +275,9 @@ function draw(){
     const near=Math.abs(d)<9; box.classList.toggle('near',near); $('tapLabel').hidden=!near;
   } else box.hidden=true;
   updateHint(d);
+  const rb=$('recBtn'), hideRec=!rec&&(!state.started||!$('settingsSheet').hidden||!$('clipSheet').hidden);
+  if(rb.hidden!==hideRec)rb.hidden=hideRec;
+  if(rec)composeFrame();
   requestAnimationFrame(draw);
 }
 
@@ -424,17 +450,26 @@ $('settingsForm').addEventListener('submit',e=>{e.preventDefault();
   applyQty();resetPool();lastHint='';$('settingsSheet').hidden=true;
 });
 function code(){const c='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let s='BX-';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
+let AC=null;
+function getAC(){
+  if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(_){}}
+  if(AC&&AC.state==='suspended')AC.resume().catch(()=>{});
+  return AC;
+}
 function tone(ac,{f0,f1,dur,type,vol}){
   if(!ac)return;try{const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime;
     o.type=type;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
     g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur+0.02)}catch(_){}
+    o.connect(g);g.connect(ac.destination);if(rec&&rec.dest)g.connect(rec.dest);
+    o.start(t);o.stop(t+dur+0.02)}catch(_){}
 }
+let fx=null; // where the box is while zooming/shaking, so the recording can follow it
 box.onclick=()=>{
   if(state.opening||Math.abs(diff(state.target,state.heading))>=9)return;
+  fx={phase:'zoom',t0:performance.now(),x0:parseFloat(box.style.left)||W/2};
   state.opening=true;box.classList.remove('near');box.classList.add('opening');$('dim').classList.add('show');
   const svg=box.querySelector('svg');svg.style.animation='none';
-  let ac=null;try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(_){}
+  const ac=getAC();
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
   setTimeout(()=>{
@@ -445,7 +480,9 @@ box.onclick=()=>{
       const amp=reduce?0:2+t*t*10, s=2.4+t*0.3+Math.sin(el/45)*0.05*t;
       const x=(Math.random()-.5)*amp,y=(Math.random()-.5)*amp,r=(Math.random()-.5)*amp*1.3;
       box.style.transform=`translate(${x}px,${y}px) scale(${s}) rotate(${r}deg)`;
-      svg.style.filter=`drop-shadow(0 0 ${8+t*36}px rgba(255,${Math.round(170-t*130)},40,${(.45+t*.5).toFixed(2)}))`;
+      const glow=`rgba(255,${Math.round(170-t*130)},40,${(.45+t*.5).toFixed(2)})`;
+      svg.style.filter=`drop-shadow(0 0 ${8+t*36}px ${glow})`;
+      fx={phase:'shake',x:W/2+x,y,s,r,glow,blur:8+t*36};
       if(el>=nextTick){
         tone(ac,{f0:1100+t*900,f1:900+t*700,dur:.05,type:'square',vol:.06});
         try{navigator.vibrate&&navigator.vibrate(15)}catch(_){}
@@ -461,14 +498,15 @@ function explode(ac,svg){
   const fl=$('flash');fl.style.transition='none';fl.style.opacity='1';
   requestAnimationFrame(()=>requestAnimationFrame(()=>{fl.style.transition='opacity .6s ease-out';fl.style.opacity='0'}));
   box.hidden=true;box.classList.remove('opening');box.style.transform='';box.style.transition='';svg.style.filter='';svg.style.animation='';
-  state.opening=false;state.opened=true;burst();
+  fx=null;state.opening=false;state.opened=true;burst();
   setTimeout(()=>{$('dim').classList.remove('show');showPrize()},350);
 }
+let shown=null;
 function showPrize(){
-  const p=pick();const card=$('prizeCard');
+  const p=pick();const card=$('prizeCard');const c=p.code?code():'';shown={p,c};
   card.innerHTML=`<div class="eyebrow">Blind box opened</div><div class="prize">${p.icon}</div>
     <span class="rar" style="color:${p.col}">${p.rar}</span><h2>${p.name}</h2><p>${p.desc}</p>
-    ${p.code?`<div class="code">${code()}</div><div class="note">Prototype code for testing. Not redeemable yet.</div>`:''}
+    ${p.code?`<div class="code">${c}</div><div class="note">Prototype code for testing. Not redeemable yet.</div>`:''}
     <button class="btn primary" id="closePrize">Done</button>`;
   $('prizeSheet').hidden=false;$('closePrize').onclick=()=>{$('prizeSheet').hidden=true};
 };
@@ -483,6 +521,137 @@ function burst(){
   let f=0;(function step(){x.clearRect(0,0,W,H);ps.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.r+=.2;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);x.restore()});
     if(++f<90)requestAnimationFrame(step);else x.clearRect(0,0,W,H)})();
 }
+
+/* ---------- optional unboxing recording ----------
+   Builds each video frame from the camera (or demo view) + the AR box + confetti + prize card,
+   so the clip shows exactly what the runner sees. Game sounds and the runner's voice are mixed in. */
+let rec=null, clip=null;
+const rc=document.createElement('canvas'), rx=rc.getContext('2d');
+const boxImg=new Image();
+(()=>{const s=box.querySelector('svg').cloneNode(true);s.setAttribute('width','240');s.setAttribute('height','240');
+  boxImg.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(s))})();
+const MIMES=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+const pickMime=()=>{try{return MIMES.find(m=>MediaRecorder.isTypeSupported(m))||''}catch(_){return ''}};
+const fmtT=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+const MAX_SEC=90;
+
+function boxFx(now){
+  if(fx&&fx.phase==='shake')return fx;
+  if(fx&&fx.phase==='zoom'){const t=Math.min(1,(now-fx.t0)/380),e=1-Math.pow(1-t,3);
+    return{x:fx.x0+(W/2-fx.x0)*e,y:0,s:1+1.4*e,r:0}}
+  const p=(now%2400)/2400, near=box.classList.contains('near');
+  return{x:parseFloat(box.style.left)||W/2,y:-5*(1-Math.cos(2*Math.PI*p)),s:1,r:-3*Math.cos(2*Math.PI*p),
+    glow:near?'rgba(255,179,64,.95)':null,blur:22};
+}
+function rrect(x,y,w,h,r){rx.beginPath();rx.moveTo(x+r,y);rx.arcTo(x+w,y,x+w,y+h,r);rx.arcTo(x+w,y+h,x,y+h,r);rx.arcTo(x,y+h,x,y,r);rx.arcTo(x,y,x+w,y,r);rx.closePath()}
+function wrap(text,maxW){const out=[];let line='';for(const w of String(text).split(' ')){const t=line?line+' '+w:w;
+  if(rx.measureText(t).width>maxW&&line){out.push(line);line=w}else line=t}if(line)out.push(line);return out}
+function drawPrizeCard(){
+  const {p,c}=shown;
+  rx.fillStyle='rgba(6,10,8,.82)';rx.fillRect(0,0,W,H);
+  const cw=Math.min(W-32,380), x=(W-cw)/2, pad=20, inner=cw-pad*2;
+  rx.font='800 24px Archivo, sans-serif';const nameL=wrap(p.name,inner);
+  rx.font='14px Archivo, sans-serif';const descL=wrap(p.desc,inner);
+  const ch=24+14+12+70+30+nameL.length*28+8+descL.length*20+(c?70:0)+20;
+  const y=Math.max(16,(H-ch)/2);
+  rrect(x,y,cw,ch,20);rx.fillStyle='#141c18';rx.fill();rx.strokeStyle='rgba(226,236,228,.16)';rx.lineWidth=1;rx.stroke();
+  rx.textAlign='center';rx.textBaseline='alphabetic';let cy=y+24+12;
+  rx.fillStyle='#ffb340';rx.font='500 11px "IBM Plex Mono", monospace';rx.fillText('BLIND BOX OPENED',W/2,cy);cy+=74;
+  rx.font='64px sans-serif';rx.fillStyle='#fff';rx.fillText(p.icon,W/2,cy);cy+=30;
+  rx.font='500 11px "IBM Plex Mono", monospace';rx.fillStyle=p.col;rx.fillText(p.rar,W/2,cy);cy+=30;
+  rx.font='800 24px Archivo, sans-serif';rx.fillStyle='#eef3ee';nameL.forEach(l=>{rx.fillText(l,W/2,cy);cy+=28});cy+=4;
+  rx.font='14px Archivo, sans-serif';rx.fillStyle='#9fb0a5';descL.forEach(l=>{rx.fillText(l,W/2,cy);cy+=20});
+  if(c){cy+=14;rrect(x+pad,cy,inner,44,10);rx.fillStyle='rgba(255,179,64,.12)';rx.fill();rx.setLineDash([5,4]);rx.strokeStyle='#ffb340';rx.stroke();rx.setLineDash([]);
+    rx.font='500 18px "IBM Plex Mono", monospace';rx.fillStyle='#ffb340';rx.fillText(c,W/2,cy+28)}
+}
+function composeFrame(){
+  const k=rec.k, now=performance.now();
+  rx.setTransform(k,0,0,k,0,0);rx.globalAlpha=1;rx.shadowBlur=0;
+  // 1. what the runner is looking at
+  if(state.camOk&&cam.readyState>=2&&cam.videoWidth){const vw=cam.videoWidth,vh=cam.videoHeight,sc=Math.max(W/vw,H/vh);
+    rx.drawImage(cam,(W-vw*sc)/2,(H-vh*sc)/2,vw*sc,vh*sc)}
+  else rx.drawImage(view,0,0,W,H);
+  // 2. dim behind the opening box
+  const dimO=parseFloat(getComputedStyle($('dim')).opacity)||0;
+  if(dimO>0){rx.fillStyle=`rgba(6,10,8,${(.6*dimO).toFixed(3)})`;rx.fillRect(0,0,W,H)}
+  // 3. the AR box
+  if(!box.hidden&&boxImg.complete){const f=boxFx(now);rx.save();rx.translate(f.x,H*0.46+f.y);rx.rotate(f.r*Math.PI/180);rx.scale(f.s,f.s);
+    if(f.glow){rx.shadowColor=f.glow;rx.shadowBlur=f.blur*k}rx.drawImage(boxImg,-60,-60,120,120);rx.restore()}
+  // 4. confetti and flash
+  rx.drawImage($('burst'),0,0,W,H);
+  const flO=parseFloat(getComputedStyle($('flash')).opacity)||0;
+  if(flO>0){rx.fillStyle=`rgba(255,247,230,${flO.toFixed(3)})`;rx.fillRect(0,0,W,H)}
+  // 5. prize reveal
+  if(shown&&!$('prizeSheet').hidden)drawPrizeCard();
+  // 6. Bukit-X tag for sharing
+  rx.textAlign='left';rx.textBaseline='alphabetic';
+  const sub='Bukit Sri Bintang · 212 m · '+new Date().toLocaleDateString([], {day:'numeric',month:'short',year:'numeric'});
+  rx.font='500 10.5px "IBM Plex Mono", monospace';const tw=Math.min(W-28,Math.max(150,rx.measureText(sub).width)+24);
+  rrect(14,14,tw,46,12);rx.fillStyle='rgba(12,18,16,.72)';rx.fill();
+  rx.fillStyle='#ff5a36';rx.font='800 15px Archivo, sans-serif';rx.fillText('BUKIT-X PEAK HUNT',26,34);
+  rx.fillStyle='#eef3ee';rx.font='500 10.5px "IBM Plex Mono", monospace';rx.fillText(sub,26,50);
+}
+
+function recUI(on,txt){const b=$('recBtn');b.classList.toggle('on',on);$('recTxt').textContent=txt;b.setAttribute('aria-label',on?'Stop recording':'Start recording')}
+function flashRecMsg(msg){recUI(false,msg);setTimeout(()=>{if(!rec)recUI(false,'Record')},2600)}
+
+async function startRec(){
+  if(!window.MediaRecorder||!rc.captureStream){flashRecMsg('Not supported on this browser');return}
+  const ac=getAC(); // created inside the tap so iPhone allows sound
+  recUI(true,'Starting…');
+  const k=Math.min(2,720/W);
+  rc.width=Math.round(W*k/2)*2;rc.height=Math.round(H*k/2)*2;
+  rec={k,starting:true};composeFrame();
+  let dest=null;try{if(ac&&ac.createMediaStreamDestination)dest=ac.createMediaStreamDestination()}catch(_){}
+  let mic=null;
+  try{mic=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+    if(ac&&dest)ac.createMediaStreamSource(mic).connect(dest)}catch(_){mic=null}
+  if(!rec){if(mic)mic.getTracks().forEach(t=>t.stop());return} // stopped while waiting for mic permission
+  const vs=rc.captureStream(30);
+  const tracks=[...vs.getVideoTracks(),...(dest?dest.stream.getAudioTracks():[])];
+  const mime=pickMime();let mr;
+  try{mr=new MediaRecorder(new MediaStream(tracks),mime?{mimeType:mime,videoBitsPerSecond:4000000}:undefined)}
+  catch(_){try{mr=new MediaRecorder(new MediaStream(tracks))}catch(e){rec=null;if(mic)mic.getTracks().forEach(t=>t.stop());flashRecMsg('Recording not available');return}}
+  const chunks=[];
+  mr.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  mr.onstop=()=>{
+    vs.getTracks().forEach(t=>t.stop());if(mic)mic.getTracks().forEach(t=>t.stop());
+    const type=mr.mimeType||mime||'video/webm';
+    if(!chunks.length){flashRecMsg('Nothing recorded');return}
+    showClip(new Blob(chunks,{type}),type);
+  };
+  rec={k,dest,mr,mic,t0:Date.now()};
+  mr.start(1000);
+  rec.timer=setInterval(()=>{const s=(Date.now()-rec.t0)/1000;recUI(true,fmtT(s)+(rec.mic?'':' · no mic'));if(s>=MAX_SEC)stopRec()},250);
+  recUI(true,'0:00'+(mic?'':' · no mic'));
+  try{navigator.vibrate&&navigator.vibrate(20)}catch(_){}
+}
+function stopRec(){
+  if(!rec)return;const r=rec;rec=null;clearInterval(r.timer);recUI(false,'Record');
+  if(r.mr&&r.mr.state!=='inactive'){try{r.mr.requestData()}catch(_){}r.mr.stop()}
+  else if(r.mic)r.mic.getTracks().forEach(t=>t.stop());
+}
+$('recBtn').onclick=()=>{rec?stopRec():startRec()};
+
+function showClip(blob,type){
+  const ext=type.includes('mp4')?'mp4':'webm', d=new Date(), pad=n=>String(n).padStart(2,'0');
+  const name=`bukit-x-peak-hunt-${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.${ext}`;
+  const url=URL.createObjectURL(blob);
+  clip={url,file:new File([blob],name,{type:type.split(';')[0]})};
+  const v=$('clipVid');v.src=url;
+  const a=$('clipSave');a.href=url;a.download=name;
+  const canShare=!!(navigator.canShare&&navigator.canShare({files:[clip.file]}));
+  $('clipShare').hidden=!canShare;
+  $('clipSheet').hidden=false;
+}
+$('clipShare').onclick=async()=>{
+  if(!clip)return;
+  try{await navigator.share({files:[clip.file],title:'My Bukit-X Peak Hunt'})}catch(_){}
+};
+$('clipDiscard').onclick=()=>{
+  const v=$('clipVid');v.pause();v.removeAttribute('src');v.load();
+  if(clip)URL.revokeObjectURL(clip.url);clip=null;$('clipSheet').hidden=true;
+};
 
 renderChips();draw();
 })();
