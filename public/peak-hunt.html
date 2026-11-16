@@ -66,6 +66,16 @@ body{background:var(--bg);color:var(--fg);font-family:var(--display);overflow:hi
 .rar{display:inline-block;font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid currentColor;margin-bottom:6px}
 .code{font-family:var(--mono);font-size:18px;letter-spacing:.08em;background:rgba(255,179,64,.12);border:1px dashed var(--amber);border-radius:10px;padding:10px;margin:0 0 6px;color:var(--amber);user-select:all;-webkit-user-select:all}
 .note{font-size:11px;color:var(--muted);margin-bottom:14px}
+.card.settings{text-align:left;max-height:calc(100% - 32px);overflow-y:auto;padding:20px}
+.settings h2{font-size:22px}
+.settings fieldset{border:1px solid var(--line);border-radius:12px;padding:10px 12px 12px;margin:0 0 12px;display:grid;gap:8px}
+.settings legend{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);padding:0 4px}
+.settings label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.settings .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.settings .prow{display:grid;grid-template-columns:1fr 72px;gap:8px;align-items:center;font-size:13px;color:var(--fg)}
+.settings input[type=number],.settings input[type=datetime-local]{width:100%;min-width:0;font:500 14px var(--mono);color:var(--fg);background:#0c1210;border:1px solid var(--line);border-radius:8px;padding:8px}
+.settings .check{display:flex;gap:8px;align-items:center;color:var(--fg)}
+.settings .sum{font-family:var(--mono);font-size:12px;color:var(--muted)}
 .burst{position:absolute;inset:0;pointer-events:none;z-index:11}
 .box.opening{left:50%!important;transform:scale(2.4);transition:transform .38s cubic-bezier(.2,1.5,.4,1),left .3s ease;z-index:9;cursor:default}
 .box.opening .tap,.box.opening .brandtag{display:none}
@@ -138,7 +148,35 @@ body{background:var(--bg);color:var(--fg);font-family:var(--display);overflow:hi
       <button class="btn primary" id="startReal">Start hunt (camera + GPS)</button>
       <button class="btn" id="startCamTest">Test camera + AR here (skip GPS)</button>
       <button class="btn" id="startDemo">Try demo without camera</button>
+      <button class="btn" id="openSettings">Organiser settings</button>
     </div>
+  </div>
+
+  <div class="sheet" id="settingsSheet" hidden>
+    <form class="card settings" id="settingsForm">
+      <div class="eyebrow">Organiser · Sri Bintang summit</div>
+      <h2>Box drop settings</h2>
+      <fieldset><legend>Drop time</legend>
+        <div class="two">
+          <label for="sStart">Opens<input type="datetime-local" id="sStart" required></label>
+          <label for="sEnd">Closes<input type="datetime-local" id="sEnd" required></label>
+        </div>
+      </fieldset>
+      <fieldset><legend>Release</legend>
+        <div class="two">
+          <label for="sWave">Boxes per wave<input type="number" id="sWave" min="0" step="1"></label>
+          <label for="sEvery">Every (minutes)<input type="number" id="sEvery" min="1" step="1"></label>
+        </div>
+        <span class="sum">Set boxes per wave to 0 to release everything when the drop opens.</span>
+        <label class="check" for="sOne"><input type="checkbox" id="sOne"> One box per runner per drop</label>
+      </fieldset>
+      <fieldset><legend>Prizes at this location</legend>
+        <div id="sPrizes" style="display:grid;gap:8px"></div>
+        <span class="sum" id="sTotal"></span>
+      </fieldset>
+      <button class="btn primary" type="submit">Save and refill boxes</button>
+      <button class="btn" type="button" id="closeSettings">Cancel</button>
+    </form>
   </div>
 
   <div class="sheet" id="prizeSheet" hidden>
@@ -202,7 +240,7 @@ function draw(){
   const h=Math.round(state.heading);
   const dirs=['N','NE','E','SE','S','SW','W','NW'];
   $('compass').textContent=dirs[Math.round(h/45)%8]+' '+h+'°';
-  const showBox=state.started&&state.inZone&&!state.opened;
+  const showBox=state.started&&state.inZone&&!state.opened&&dropStatus().ok;
   const d=diff(state.target,state.heading);
   // radar dot: relative bearing, 0 = straight ahead (top)
   const ang=(d-90)*Math.PI/180, r=30;
@@ -227,15 +265,17 @@ function setHint(title,text,buttons){
 }
 function updateHint(d){
   if(!state.started)return;
-  if(state.opened){setHint('Box opened',boxesLeft()+' of '+TOTAL+' club boxes left at this peak.',[['Hunt again (test)',reset,true],['Refill all '+TOTAL+' boxes',resetPool]]);return}
+  if(state.opened){setHint('Box opened',boxesLeft()+' of '+TOTAL()+' club boxes left at this peak.',[['Hunt again (test)',reset,true],['Settings',openSettings]]);return}
   if(!state.inZone){
     const far=state.dist!=null?(state.dist>=1000?(state.dist/1000).toFixed(1)+' km':Math.round(state.dist)+' m'):'unknown distance';
     setHint('Keep climbing','You are '+far+' from the summit. The box appears within '+ZONE_M+' m of the peak.',[['Teleport to summit (demo)',()=>{state.inZone=true;state.mode='demo';renderChips()},true]]);
     return}
+  const ds=dropStatus();
+  if(!ds.ok){setHint(ds.title,ds.text,[['Settings',openSettings]]);return}
   const a=Math.abs(d);
   const turn=d>0?'right':'left';
   const drag=state.compassOk?'Turn':'Drag to turn';
-  if(a<9) setHint('Found it!','Tap the box to open it. '+boxesLeft()+' of '+TOTAL+' club boxes left here.');
+  if(a<9) setHint('Found it!','Tap the box to open it. '+ds.avail+' box'+(ds.avail>1?'es':'')+' available now, '+boxesLeft()+' of '+TOTAL()+' left in total.');
   else if(a<35) setHint('Very warm','It is just to your '+turn+'. '+drag+' a little more.');
   else if(a<90) setHint('Getting warmer',drag+' '+turn+'. Watch the orange dot on the radar.');
   else setHint('Cold','The box is behind you. '+drag+' around slowly.');
@@ -326,7 +366,30 @@ const POOL=[
   {id:'p300',qty:8,rar:'Common',col:'#9fb0a5',icon:'⛰️',name:'300 Bukit-X points',desc:'Added to your Bukit-X account.',code:true}
 ];
 const FALLBACK={rar:'All claimed',col:'#9fb0a5',icon:'🏁',name:'100 Bukit-X points',desc:'Every club box here has been claimed. Here is a summit bonus instead.',code:true};
-const TOTAL=POOL.reduce((n,p)=>n+p.qty,0);
+const CFG_KEY=DROP_ID+'-cfg', ME_KEY=DROP_ID+'-me';
+function defaultCfg(){const d=new Date();d.setSeconds(0,0);const st=new Date(d);st.setHours(0,0);const en=new Date(d);en.setHours(23,59);
+  return{start:st.getTime(),end:en.getTime(),wave:0,every:30,one:false,qty:Object.fromEntries(POOL.map(p=>[p.id,p.qty]))}}
+let CFG=defaultCfg();
+try{const c=JSON.parse(localStorage.getItem(CFG_KEY)||'null');if(c)CFG=Object.assign(defaultCfg(),c)}catch(_){}
+function applyQty(){POOL.forEach(p=>{p.qty=Math.max(0,parseInt(CFG.qty[p.id])||0)})}
+applyQty();
+const TOTAL=()=>POOL.reduce((n,p)=>n+p.qty,0);
+let mine=0;try{mine=parseInt(localStorage.getItem(ME_KEY))||0}catch(_){}
+const hm=t=>new Date(t).toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'});
+const mins=ms=>{const m=Math.ceil(ms/60000);return m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'};
+function dropStatus(){
+  const now=Date.now(), total=TOTAL(), taken=total-boxesLeft();
+  if(now<CFG.start)return{ok:false,title:'Drop not open yet',text:'Club boxes appear here from '+hm(CFG.start)+' (in '+mins(CFG.start-now)+').'};
+  if(now>CFG.end)return{ok:false,title:'This drop has ended',text:'The club drop closed at '+hm(CFG.end)+'.'};
+  if(boxesLeft()<=0)return{ok:false,title:'All boxes claimed',text:'All '+total+' club boxes at this peak have been found.'};
+  if(CFG.one&&mine>=1)return{ok:false,title:'You already have your box',text:'One box per runner for this drop. '+boxesLeft()+' left for others.'};
+  let released=total;
+  if(CFG.wave>0){const waves=Math.floor((now-CFG.start)/(CFG.every*60000))+1;released=Math.min(total,CFG.wave*waves)}
+  const avail=Math.max(0,released-taken);
+  if(avail<=0){const next=CFG.start+(Math.floor((now-CFG.start)/(CFG.every*60000))+1)*CFG.every*60000;
+    return{ok:false,title:'Next wave coming',text:'This wave is all claimed. '+Math.min(CFG.wave,boxesLeft())+' more boxes drop in '+mins(next-now)+'.'}}
+  return{ok:true,avail};
+}
 let claimed={};
 try{claimed=JSON.parse(localStorage.getItem(DROP_ID)||'{}')||{}}catch(_){claimed={}}
 const left=p=>p.qty-(claimed[p.id]||0);
@@ -335,10 +398,31 @@ function pick(){
   const bag=[];POOL.forEach(p=>{for(let k=0;k<left(p);k++)bag.push(p)});
   if(!bag.length)return FALLBACK;
   const p=bag[Math.floor(Math.random()*bag.length)];
-  claimed[p.id]=(claimed[p.id]||0)+1;try{localStorage.setItem(DROP_ID,JSON.stringify(claimed))}catch(_){}
+  claimed[p.id]=(claimed[p.id]||0)+1;mine++;try{localStorage.setItem(DROP_ID,JSON.stringify(claimed));localStorage.setItem(ME_KEY,String(mine))}catch(_){}
   return p;
 }
-function resetPool(){claimed={};try{localStorage.removeItem(DROP_ID)}catch(_){};reset()}
+function resetPool(){claimed={};mine=0;try{localStorage.removeItem(DROP_ID);localStorage.removeItem(ME_KEY)}catch(_){};reset()}
+const toLocal=t=>{const d=new Date(t);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
+function sumQty(){let n=0;document.querySelectorAll('#sPrizes input').forEach(i=>n+=Math.max(0,parseInt(i.value)||0));$('sTotal').textContent=n+' boxes in total at this location'}
+function openSettings(){
+  $('sStart').value=toLocal(CFG.start);$('sEnd').value=toLocal(CFG.end);$('sWave').value=CFG.wave;$('sEvery').value=CFG.every;$('sOne').checked=CFG.one;
+  const box=$('sPrizes');box.innerHTML='';
+  POOL.forEach(p=>{const r=document.createElement('label');r.className='prow';r.htmlFor='q_'+p.id;
+    const sp=document.createElement('span');sp.textContent=p.icon+' '+p.name;
+    const inp=document.createElement('input');inp.type='number';inp.min='0';inp.step='1';inp.id='q_'+p.id;inp.value=p.qty;inp.oninput=sumQty;
+    r.append(sp,inp);box.appendChild(r)});
+  sumQty();$('settingsSheet').hidden=false;
+}
+$('openSettings').onclick=openSettings;
+$('closeSettings').onclick=()=>{$('settingsSheet').hidden=true};
+$('settingsForm').addEventListener('submit',e=>{e.preventDefault();
+  const st=new Date($('sStart').value).getTime(),en=new Date($('sEnd').value).getTime();
+  if(!(en>st)){$('sTotal').textContent='Closing time must be after opening time.';return}
+  CFG={start:st,end:en,wave:Math.max(0,parseInt($('sWave').value)||0),every:Math.max(1,parseInt($('sEvery').value)||30),one:$('sOne').checked,
+    qty:Object.fromEntries(POOL.map(p=>[p.id,Math.max(0,parseInt($('q_'+p.id).value)||0)]))};
+  try{localStorage.setItem(CFG_KEY,JSON.stringify(CFG))}catch(_){}
+  applyQty();resetPool();lastHint='';$('settingsSheet').hidden=true;
+});
 function code(){const c='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let s='BX-';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
 function tone(ac,{f0,f1,dur,type,vol}){
   if(!ac)return;try{const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime;
