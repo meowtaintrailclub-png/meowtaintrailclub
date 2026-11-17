@@ -387,13 +387,13 @@ $('startDemo').onclick=()=>{$('startSheet').hidden=true;state.mode='demo';state.
 /* Bukit-X Club Drop pool: the organiser sets how many of each prize sit at this location. */
 const DROP_ID='bx-drop-sri-bintang-test';
 const POOL=[
-  {id:'p10k',qty:1,rar:'Top prize',col:'#ff5a36',icon:'💎',name:'10,000 Bukit-X points',desc:'Worth RM100 in rewards on bukit-x.com.',code:true},
+  {id:'p10k',qty:1,rar:'Top prize',col:'#ff5a36',icon:'💎',name:'10,000 X Points',desc:'Worth RM100 in rewards on bukit-x.com.',code:true},
   {id:'tee',qty:2,rar:'Club item',col:'#ffb340',icon:'👕',name:'Bukit-X club tee',desc:'Collect from the club leader after the run.',code:true},
-  {id:'p2k',qty:3,rar:'Rare',col:'#5fd08a',icon:'⭐',name:'2,000 Bukit-X points',desc:'Worth RM20 in rewards on bukit-x.com.',code:true},
-  {id:'p500',qty:6,rar:'Common',col:'#9fb0a5',icon:'⛰️',name:'500 Bukit-X points',desc:'Added to your Bukit-X account.',code:true},
-  {id:'p300',qty:8,rar:'Common',col:'#9fb0a5',icon:'⛰️',name:'300 Bukit-X points',desc:'Added to your Bukit-X account.',code:true}
+  {id:'p2k',qty:3,rar:'Rare',col:'#5fd08a',icon:'⭐',name:'2,000 X Points',desc:'Worth RM20 in rewards on bukit-x.com.',code:true},
+  {id:'p500',qty:6,rar:'Common',col:'#9fb0a5',icon:'⛰️',name:'500 X Points',desc:'Added to your Bukit-X account.',code:true},
+  {id:'p300',qty:8,rar:'Common',col:'#9fb0a5',icon:'⛰️',name:'300 X Points',desc:'Added to your Bukit-X account.',code:true}
 ];
-const FALLBACK={rar:'All claimed',col:'#9fb0a5',icon:'🏁',name:'100 Bukit-X points',desc:'Every club box here has been claimed. Here is a summit bonus instead.',code:true};
+const FALLBACK={rar:'All claimed',col:'#9fb0a5',icon:'🏁',name:'100 X Points',desc:'Every club box here has been claimed. Here is a summit bonus instead.',code:true};
 const CFG_KEY=DROP_ID+'-cfg', ME_KEY=DROP_ID+'-me';
 function defaultCfg(){const d=new Date();d.setSeconds(0,0);const st=new Date(d);st.setHours(0,0);const en=new Date(d);en.setHours(23,59);
   return{start:st.getTime(),end:en.getTime(),wave:0,every:30,one:false,qty:Object.fromEntries(POOL.map(p=>[p.id,p.qty]))}}
